@@ -242,10 +242,39 @@ Ga naar je repository **Settings** > **Secrets and variables** > **Actions** en 
 | Secret | Beschrijving | Voorbeeld |
 |--------|--------------|-----------|
 | `SSH_PRIVATE_KEY` | Je SSH private key voor toegang tot de server | Inhoud van `~/.ssh/id_rsa` |
-| `SSH_HOST` | Hostname of IP-adres van je server | `example.com` of `192.168.1.100` |
+| `SSH_HOST` | Hostname of IP-adres van je server | `htools.nl` of `192.168.1.100` |
 | `SSH_USERNAME` | SSH gebruikersnaam | `root` of `gebruiker` |
 | `SSH_PORT` | SSH poort (optioneel, default: 22) | `22` of `2222` |
-| `DEPLOY_PATH` | Pad op de server waar bestanden geplaatst worden | `/var/www/html` of `~/public_html` |
+| `DEPLOY_PATH` | Pad op de server waar bestanden geplaatst worden | `/var/www/html/top-2000-tool` |
+
+#### 📁 Deployment naar Subdirectory
+
+Voor deployment naar `htools.nl/top-2000-tool`:
+
+```bash
+# DEPLOY_PATH moet de volledige subdirectory bevatten
+DEPLOY_PATH=/var/www/html/top-2000-tool
+
+# Of als je webroot anders is:
+DEPLOY_PATH=/home/gebruiker/public_html/top-2000-tool
+```
+
+**Meerdere repositories op 1 domein:**
+- Repository 1: `DEPLOY_PATH=/var/www/html/top-2000-tool` → `htools.nl/top-2000-tool`
+- Repository 2: `DEPLOY_PATH=/var/www/html/ander-project` → `htools.nl/ander-project`
+- Repository 3: `DEPLOY_PATH=/var/www/html/nog-een-tool` → `htools.nl/nog-een-tool`
+
+Elke repository gebruikt dezelfde `SSH_HOST`, `SSH_USERNAME` en `SSH_PRIVATE_KEY`, maar een ander `DEPLOY_PATH`.
+
+#### 🎵 Spotify Redirect URI voor Subdirectory
+
+De app detecteert automatisch de juiste redirect URI. Voor `htools.nl/top-2000-tool/index.html` gebruik je in Spotify Developer Dashboard:
+
+```
+https://htools.nl/top-2000-tool/index.html
+```
+
+De redirect URI wordt dynamisch gegenereerd, dus je hoeft niets in de code aan te passen! 🎉
 
 ### SSH Key Genereren
 
