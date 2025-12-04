@@ -52,6 +52,25 @@ jobs:
           }
           echo "✅ SSH setup complete"
 
+      - name: Test SSH connection
+        run: |
+          echo "Testing SSH connection with verbose output..."
+          ssh -v -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 22 }} -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
+            "echo 'SSH connection successful!' && whoami && pwd" || {
+            echo ""
+            echo "❌ SSH connection failed!"
+            echo ""
+            echo "Possible causes:"
+            echo "1. SSH public key not added to server's ~/.ssh/authorized_keys"
+            echo "2. Wrong SSH_USERNAME (check with your hosting provider)"
+            echo "3. Wrong SSH_PRIVATE_KEY (must match the public key on server)"
+            echo "4. Server requires password authentication (not supported by GitHub Actions)"
+            echo ""
+            exit 1
+          }
+
       - name: Create deployment directory
         run: |
           echo "Creating deployment directory on server..."
