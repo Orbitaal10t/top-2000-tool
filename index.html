@@ -63,18 +63,40 @@
 
         .now-playing .track-info {
             margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
         }
 
-        .now-playing .artist {
+        .now-playing .cover-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            object-fit: cover;
+        }
+
+        .now-playing .track-details {
+            text-align: center;
+        }
+
+        .now-playing .title {
             font-size: 24px;
             font-weight: bold;
             color: #333;
             margin-bottom: 8px;
         }
 
-        .now-playing .title {
+        .now-playing .artist {
             font-size: 20px;
             color: #666;
+        }
+
+        .now-playing .presenter {
+            font-size: 14px;
+            color: #999;
+            margin-top: 8px;
         }
 
         .now-playing .last-updated {
@@ -372,11 +394,16 @@
                 grid-template-columns: 1fr;
             }
 
-            .now-playing .artist {
-                font-size: 20px;
+            .now-playing .cover-image {
+                width: 150px;
+                height: 150px;
             }
 
             .now-playing .title {
+                font-size: 20px;
+            }
+
+            .now-playing .artist {
                 font-size: 18px;
             }
 
@@ -832,20 +859,15 @@
                 const data = await response.json();
 
                 // Parse the response - miniplayer API format
-                let artist, title;
-
-                // Get current playing track from radioTrackPlays
                 const currentPlay = data?.data?.radioTrackPlays?.data?.[0];
+                const currentBroadcast = data?.data?.radioBroadcasts?.data?.[0];
 
                 if (currentPlay?.artist && currentPlay?.song) {
-                    artist = currentPlay.artist;
-                    title = currentPlay.song;
-                }
-
-                if (artist && title) {
                     currentTrack = {
-                        artist: artist,
-                        title: title,
+                        artist: currentPlay.artist,
+                        title: currentPlay.song,
+                        coverUrl: currentPlay.radioTracks?.coverUrl || null,
+                        presenters: currentBroadcast?.radioPresenters?.map(p => p.name) || [],
                         timestamp: new Date().toISOString()
                     };
 
@@ -868,11 +890,23 @@
             const container = document.getElementById('nowPlayingContent');
             const now = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
 
+            const coverHtml = track.coverUrl
+                ? `<img src="${escapeHtml(track.coverUrl)}" alt="Album cover" class="cover-image" onerror="this.style.display='none'">`
+                : '';
+
+            const presenterHtml = track.presenters && track.presenters.length > 0
+                ? `<div class="presenter">🎙️ ${escapeHtml(track.presenters.join(', '))}</div>`
+                : '';
+
             container.innerHTML = `
                 <div class="track-info">
-                    <div class="artist">${escapeHtml(track.artist)}</div>
-                    <div class="title">${escapeHtml(track.title)}</div>
-                    <div class="last-updated">Bijgewerkt om ${now}</div>
+                    ${coverHtml}
+                    <div class="track-details">
+                        <div class="title">${escapeHtml(track.title)}</div>
+                        <div class="artist">${escapeHtml(track.artist)}</div>
+                        ${presenterHtml}
+                        <div class="last-updated">Bijgewerkt om ${now}</div>
+                    </div>
                 </div>
             `;
         }
