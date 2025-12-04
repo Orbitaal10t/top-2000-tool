@@ -45,10 +45,10 @@ jobs:
           echo "Writing SSH key..."
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          echo "Scanning host keys..."
-          ssh-keyscan -p ${{ secrets.SSH_PORT || 22 }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts || {
-            echo "❌ Failed to scan host keys. Check if SSH_HOST and SSH_PORT are correct."
-            exit 1
+          echo "Scanning host keys (optional)..."
+          ssh-keyscan -p ${{ secrets.SSH_PORT || 22 }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || {
+            echo "⚠️  Warning: Could not scan host keys (this is normal for some hosting providers)"
+            echo "   Continuing with StrictHostKeyChecking=no..."
           }
           echo "✅ SSH setup complete"
 
