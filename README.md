@@ -229,42 +229,44 @@ Dit is een persoonlijk project voor educatieve doeleinden. Vrij te gebruiken en 
 
 ## 🚀 Automatische Deployment
 
-Deze repository is geconfigureerd met GitHub Actions voor automatische deployment naar je website via SSH.
+Deze repository is geconfigureerd met GitHub Actions voor automatische deployment naar je website.
 
-### Deployment Setup
+### 🎯 Deployment Methode: FTP (Aanbevolen voor DirectAdmin)
 
-De workflow deployt automatisch naar je website wanneer er code naar de `main` branch wordt gepusht.
+De workflow deployt automatisch via **FTP** naar je website wanneer er code naar de `main` branch wordt gepusht.
 
-### Vereiste GitHub Secrets
+**Waarom FTP?** Veel hosting providers (zoals DirectAdmin) blokkeren SSH toegang vanaf GitHub Actions IP-adressen, maar FTP werkt wel!
+
+### Vereiste GitHub Secrets (FTP)
 
 Ga naar je repository **Settings** > **Secrets and variables** > **Actions** en voeg de volgende secrets toe:
 
-| Secret | Beschrijving | Voorbeeld |
-|--------|--------------|-----------|
-| `SSH_PRIVATE_KEY` | Je SSH private key voor toegang tot de server | Inhoud van `~/.ssh/id_rsa` |
-| `SSH_HOST` | Hostname of IP-adres van je server | `htools.nl` of `192.168.1.100` |
-| `SSH_USERNAME` | SSH gebruikersnaam | `root` of `gebruiker` |
-| `SSH_PORT` | SSH poort (optioneel, default: 22) | `22` of `2222` |
-| `DEPLOY_PATH` | Pad op de server waar bestanden geplaatst worden | `/var/www/html/top-2000-tool` |
+| Secret | Beschrijving | Waar te vinden |
+|--------|--------------|----------------|
+| `FTP_SERVER` | FTP server hostname | DirectAdmin → FTP Accounts, meestal `htools.nl` |
+| `FTP_USERNAME` | FTP gebruikersnaam | DirectAdmin → FTP Accounts (vaak `gebruiker@htools.nl`) |
+| `FTP_PASSWORD` | FTP wachtwoord | Het wachtwoord dat je hebt ingesteld voor FTP |
+| `FTP_SERVER_DIR` | Directory op server | `/domains/htools.nl/public_html/top-2000-tool/` |
 
-#### 📁 Deployment naar Subdirectory
+### 📋 FTP Inloggegevens Vinden in DirectAdmin
 
-Voor deployment naar `htools.nl/top-2000-tool`:
+1. Log in op DirectAdmin (meestal `htools.nl:2222`)
+2. Ga naar **Account Manager** → **FTP Management** (of **FTP Accounts**)
+3. Hier vind je:
+   - **FTP Server**: meestal je domeinnaam (`htools.nl`)
+   - **Username**: vaak `gebruikersnaam@domein.nl`
+   - **Server Directory**: Het pad naar je website
 
-```bash
-# DEPLOY_PATH moet de volledige subdirectory bevatten
-DEPLOY_PATH=/var/www/html/top-2000-tool
-
-# Of als je webroot anders is:
-DEPLOY_PATH=/home/gebruiker/public_html/top-2000-tool
-```
+**Directory pad achterhalen:**
+- Klik op **File Manager** in DirectAdmin
+- Navigeer naar waar je de tool wilt deployen
+- Het pad staat bovenaan, bijv: `/domains/htools.nl/public_html/top-2000-tool/`
 
 **Meerdere repositories op 1 domein:**
-- Repository 1: `DEPLOY_PATH=/var/www/html/top-2000-tool` → `htools.nl/top-2000-tool`
-- Repository 2: `DEPLOY_PATH=/var/www/html/ander-project` → `htools.nl/ander-project`
-- Repository 3: `DEPLOY_PATH=/var/www/html/nog-een-tool` → `htools.nl/nog-een-tool`
-
-Elke repository gebruikt dezelfde `SSH_HOST`, `SSH_USERNAME` en `SSH_PRIVATE_KEY`, maar een ander `DEPLOY_PATH`.
+Gebruik voor elke repository een ander `FTP_SERVER_DIR`:
+- Repository 1: `/domains/htools.nl/public_html/top-2000-tool/` → `htools.nl/top-2000-tool`
+- Repository 2: `/domains/htools.nl/public_html/ander-project/` → `htools.nl/ander-project`
+- Repository 3: `/domains/htools.nl/public_html/nog-een-tool/` → `htools.nl/nog-een-tool`
 
 #### 🎵 Spotify Redirect URI voor Subdirectory
 
@@ -276,37 +278,28 @@ https://htools.nl/top-2000-tool/index.html
 
 De redirect URI wordt dynamisch gegenereerd, dus je hoeft niets in de code aan te passen! 🎉
 
-### SSH Key Genereren
+### 🚀 Deployment Activeren
 
-Als je nog geen SSH key hebt:
-
-```bash
-# Genereer een nieuwe SSH key
-ssh-keygen -t ed25519 -C "github-actions-deploy"
-
-# Kopieer de public key naar je server
-ssh-copy-id -i ~/.ssh/id_ed25519.pub gebruiker@jouwserver.nl
-
-# Toon de private key (kopieer deze naar GitHub Secrets)
-cat ~/.ssh/id_ed25519
-```
-
-### Workflow Triggers
-
-De deployment wordt automatisch gestart bij:
-- Push naar de `main` branch
-- Merge van een pull request naar `main`
+1. **Voeg FTP secrets toe** (zie sectie hierboven)
+2. **Merge naar main** of push direct naar `main`
+3. **Check de deployment** in de **Actions** tab
 
 De workflow:
 1. ✅ Checkt de code uit
-2. ✅ Configureert SSH authenticatie
-3. ✅ Synchroniseert bestanden via rsync
-4. ✅ Verwijdert tijdelijke SSH keys
-5. ✅ Excludeert `.git`, `.github` en `stappenlijst.md`
+2. ✅ Maakt verbinding via FTP
+3. ✅ Synchroniseert alleen gewijzigde bestanden
+4. ✅ Excludeert `.git`, `.github` en `stappenlijst.md`
+5. ✅ Deployment compleet!
 
-### Deployment Status
+### 📊 Deployment Status
 
-Check de deployment status in de **Actions** tab van je repository.
+Check de deployment status in de **Actions** tab van je repository. Je ziet precies welke bestanden zijn geüpload!
+
+---
+
+### 🔧 Alternatieve Methode: SSH (Geavanceerd)
+
+Als je hosting provider GitHub Actions IPs toestaat, kun je ook SSH deployment gebruiken. Zie `.github/workflows/deploy-ssh.yml.disabled` voor de SSH configuratie.
 
 ## 📧 Support
 
