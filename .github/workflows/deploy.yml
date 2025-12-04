@@ -13,90 +13,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Validate secrets
-        run: |
-          echo "Checking if required secrets are set..."
-          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
-            echo "❌ Error: SSH_PRIVATE_KEY secret is not set!"
-            exit 1
-          fi
-          if [ -z "${{ secrets.SSH_HOST }}" ]; then
-            echo "❌ Error: SSH_HOST secret is not set!"
-            exit 1
-          fi
-          if [ -z "${{ secrets.SSH_USERNAME }}" ]; then
-            echo "❌ Error: SSH_USERNAME secret is not set!"
-            exit 1
-          fi
-          if [ -z "${{ secrets.DEPLOY_PATH }}" ]; then
-            echo "❌ Error: DEPLOY_PATH secret is not set!"
-            exit 1
-          fi
-          echo "✅ All required secrets are set"
-          echo "📡 SSH_HOST: ${{ secrets.SSH_HOST }}"
-          echo "👤 SSH_USERNAME: ${{ secrets.SSH_USERNAME }}"
-          echo "🔌 SSH_PORT: ${{ secrets.SSH_PORT || 22 }}"
-          echo "📁 DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}"
-
       - name: Setup SSH
         run: |
-          echo "Creating SSH directory..."
           mkdir -p ~/.ssh
-          echo "Writing SSH key..."
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          echo "Scanning host keys (optional)..."
-          ssh-keyscan -p ${{ secrets.SSH_PORT || 22 }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || {
-            echo "⚠️  Warning: Could not scan host keys (this is normal for some hosting providers)"
-            echo "   Continuing with StrictHostKeyChecking=no..."
-          }
-          echo "✅ SSH setup complete"
-
-      - name: Test SSH connection
-        run: |
-          echo "Testing SSH connection with verbose output..."
-          ssh -v -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 22 }} -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=10 \
-            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
-            "echo 'SSH connection successful!' && whoami && pwd" || {
-            echo ""
-            echo "❌ SSH connection failed!"
-            echo ""
-            echo "Possible causes:"
-            echo "1. SSH public key not added to server's ~/.ssh/authorized_keys"
-            echo "2. Wrong SSH_USERNAME (check with your hosting provider)"
-            echo "3. Wrong SSH_PRIVATE_KEY (must match the public key on server)"
-            echo "4. Server requires password authentication (not supported by GitHub Actions)"
-            echo ""
-            exit 1
-          }
+          ssh-keyscan -p ${{ secrets.SSH_PORT || 22 }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Create deployment directory
         run: |
-          echo "Creating deployment directory on server..."
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 22 }} -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
-            "mkdir -p ${{ secrets.DEPLOY_PATH }}" || {
-            echo "❌ Failed to create deployment directory. Check SSH credentials and DEPLOY_PATH."
-            exit 1
-          }
-          echo "✅ Deployment directory ready"
+            "mkdir -p ${{ secrets.DEPLOY_PATH }}"
 
       - name: Deploy via rsync
         run: |
-          echo "🚀 Starting deployment via rsync..."
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 22 }} -o StrictHostKeyChecking=no" \
             --exclude '.git' \
             --exclude '.github' \
             --exclude 'stappenlijst.md' \
-            ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }} || {
-            echo "❌ Deployment failed. Check SSH connection and permissions."
-            exit 1
-          }
-          echo "✅ Deployment successful!"
+            ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}
 
       - name: Cleanup
         if: always()
-        run: |
-          rm -f ~/.ssh/deploy_key
+        run: rm -f ~/.ssh/deploy_key
+
