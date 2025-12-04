@@ -227,79 +227,83 @@ Dit is een persoonlijk project voor educatieve doeleinden. Vrij te gebruiken en 
 - Spotify voor de Web API
 - Gebouwd met ❤️ voor muziekliefhebbers
 
-## 🚀 Automatische Deployment
+## 🚀 Automatische Deployment via SSH
 
-Deze repository is geconfigureerd met GitHub Actions voor automatische deployment naar je website.
+Deze repository is geconfigureerd met GitHub Actions voor automatische deployment naar je website via SSH.
 
-### 🎯 Deployment Methode: FTP (Aanbevolen voor DirectAdmin)
-
-De workflow deployt automatisch via **FTP** naar je website wanneer er code naar de `main` branch wordt gepusht.
-
-**Waarom FTP?** Veel hosting providers (zoals DirectAdmin) blokkeren SSH toegang vanaf GitHub Actions IP-adressen, maar FTP werkt wel!
-
-### Vereiste GitHub Secrets (FTP)
+### Vereiste GitHub Secrets
 
 Ga naar je repository **Settings** > **Secrets and variables** > **Actions** en voeg de volgende secrets toe:
 
-| Secret | Beschrijving | Waar te vinden |
-|--------|--------------|----------------|
-| `FTP_SERVER` | FTP server hostname | DirectAdmin → FTP Accounts, meestal `htools.nl` |
-| `FTP_USERNAME` | FTP gebruikersnaam | DirectAdmin → FTP Accounts (vaak `gebruiker@htools.nl`) |
-| `FTP_PASSWORD` | FTP wachtwoord | Het wachtwoord dat je hebt ingesteld voor FTP |
-| `FTP_SERVER_DIR` | Directory op server | `/domains/htools.nl/public_html/top-2000-tool/` |
+| Secret | Beschrijving | Voorbeeld voor DirectAdmin |
+|--------|--------------|----------------------------|
+| `SSH_PRIVATE_KEY` | Je SSH private key | Inhoud van `~/.ssh/id_ed25519` |
+| `SSH_HOST` | Hostname van je server | `htools.nl` |
+| `SSH_USERNAME` | SSH gebruikersnaam | Je DirectAdmin gebruikersnaam |
+| `SSH_PORT` | SSH poort (optioneel, standaard 22) | `21098` of `22` |
+| `DEPLOY_PATH` | **Absoluut pad** op server waar bestanden komen | `/home/USERNAME/domains/htools.nl/public_html/top-2000-tool` |
 
-### 📋 FTP Inloggegevens Vinden in DirectAdmin
+### 📁 DEPLOY_PATH Vinden in DirectAdmin
 
-1. Log in op DirectAdmin (meestal `htools.nl:2222`)
-2. Ga naar **Account Manager** → **FTP Management** (of **FTP Accounts**)
-3. Hier vind je:
-   - **FTP Server**: meestal je domeinnaam (`htools.nl`)
-   - **Username**: vaak `gebruikersnaam@domein.nl`
-   - **Server Directory**: Het pad naar je website
+Het `DEPLOY_PATH` moet het **volledige absolute pad** zijn op je server:
 
-**Directory pad achterhalen:**
-- Klik op **File Manager** in DirectAdmin
-- Navigeer naar waar je de tool wilt deployen
-- Het pad staat bovenaan, bijv: `/domains/htools.nl/public_html/top-2000-tool/`
+1. Log in op DirectAdmin
+2. Ga naar **File Manager**
+3. Navigeer naar de juiste locatie (bijv. `public_html/top-2000-tool`)
+4. Het volledige pad staat bovenaan de pagina
 
-**Meerdere repositories op 1 domein:**
-Gebruik voor elke repository een ander `FTP_SERVER_DIR`:
-- Repository 1: `/domains/htools.nl/public_html/top-2000-tool/` → `htools.nl/top-2000-tool`
-- Repository 2: `/domains/htools.nl/public_html/ander-project/` → `htools.nl/ander-project`
-- Repository 3: `/domains/htools.nl/public_html/nog-een-tool/` → `htools.nl/nog-een-tool`
+**DirectAdmin paden volgen meestal dit patroon:**
+```
+/home/USERNAME/domains/DOMEIN/public_html/SUBDIRECTORY
+```
 
-#### 🎵 Spotify Redirect URI voor Subdirectory
+**Voorbeelden:**
+- Hoofddirectory: `/home/username/domains/htools.nl/public_html`
+- Subdirectory: `/home/username/domains/htools.nl/public_html/top-2000-tool`
 
-De app detecteert automatisch de juiste redirect URI. Voor `htools.nl/top-2000-tool/index.html` gebruik je in Spotify Developer Dashboard:
+**Voor meerdere repositories op 1 domein:**
+- Repository 1: `/home/username/domains/htools.nl/public_html/top-2000-tool` → `htools.nl/top-2000-tool`
+- Repository 2: `/home/username/domains/htools.nl/public_html/ander-project` → `htools.nl/ander-project`
 
+### 🔑 SSH Key Setup
+
+1. **Genereer een SSH key pair** (zonder wachtwoord):
+   ```bash
+   ssh-keygen -t ed25519 -f ~/.ssh/github_deploy -N ""
+   ```
+
+2. **Voeg de public key toe aan DirectAdmin**:
+   - Kopieer de public key: `cat ~/.ssh/github_deploy.pub`
+   - DirectAdmin → **SSH Keys** → plak de public key
+   - Of via SSH: `cat ~/.ssh/github_deploy.pub >> ~/.ssh/authorized_keys`
+
+3. **Test de verbinding**:
+   ```bash
+   ssh -i ~/.ssh/github_deploy username@htools.nl
+   ```
+
+4. **Voeg private key toe aan GitHub Secrets**:
+   - Kopieer de private key: `cat ~/.ssh/github_deploy`
+   - GitHub → Settings → Secrets → `SSH_PRIVATE_KEY`
+
+### 🎵 Spotify Redirect URI
+
+Voor `htools.nl/top-2000-tool/index.html` gebruik je in Spotify Developer Dashboard:
 ```
 https://htools.nl/top-2000-tool/index.html
 ```
+De redirect URI wordt dynamisch gegenereerd! 🎉
 
-De redirect URI wordt dynamisch gegenereerd, dus je hoeft niets in de code aan te passen! 🎉
+### 🚀 Deployment
 
-### 🚀 Deployment Activeren
+De deployment start automatisch bij elke push naar `main`. Check de **Actions** tab voor de status.
 
-1. **Voeg FTP secrets toe** (zie sectie hierboven)
-2. **Merge naar main** of push direct naar `main`
-3. **Check de deployment** in de **Actions** tab
-
-De workflow:
-1. ✅ Checkt de code uit
-2. ✅ Maakt verbinding via FTP
-3. ✅ Synchroniseert alleen gewijzigde bestanden
-4. ✅ Excludeert `.git`, `.github` en `stappenlijst.md`
+**De workflow:**
+1. ✅ Valideert alle secrets
+2. ✅ Test SSH verbinding
+3. ✅ Maakt deployment directory aan
+4. ✅ Synchroniseert bestanden via rsync
 5. ✅ Deployment compleet!
-
-### 📊 Deployment Status
-
-Check de deployment status in de **Actions** tab van je repository. Je ziet precies welke bestanden zijn geüpload!
-
----
-
-### 🔧 Alternatieve Methode: SSH (Geavanceerd)
-
-Als je hosting provider GitHub Actions IPs toestaat, kun je ook SSH deployment gebruiken. Zie `.github/workflows/deploy-ssh.yml.disabled` voor de SSH configuratie.
 
 ## 📧 Support
 
