@@ -831,23 +831,15 @@
 
                 const data = await response.json();
 
-                // Parse the response - support multiple API formats
+                // Parse the response - miniplayer API format
                 let artist, title;
 
-                // Try miniplayer format: data.now.artist / data.now.title
-                if (data?.now?.artist && data?.now?.title) {
-                    artist = data.now.artist;
-                    title = data.now.title;
-                }
-                // Try direct format: data.artist / data.title
-                else if (data?.artist && data?.title) {
-                    artist = data.artist;
-                    title = data.title;
-                }
-                // Try alternative format: data.now.artistName / data.now.songTitle
-                else if (data?.now?.artistName && data?.now?.songTitle) {
-                    artist = data.now.artistName;
-                    title = data.now.songTitle;
+                // Get current playing track from radioTrackPlays
+                const currentPlay = data?.data?.radioTrackPlays?.data?.[0];
+
+                if (currentPlay?.artist && currentPlay?.song) {
+                    artist = currentPlay.artist;
+                    title = currentPlay.song;
                 }
 
                 if (artist && title) {
