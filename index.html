@@ -549,7 +549,7 @@
         // ============================================
         // CONFIGURATION
         // ============================================
-        const NPO_API_URL = 'https://www.nporadio2.nl/api/tracks/now';
+        const NPO_API_URL = 'https://www.nporadio2.nl/api/miniplayer/info?channel=npo-radio-2';
         const SPOTIFY_AUTH_URL = 'https://accounts.spotify.com/authorize';
         const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
         const SPOTIFY_API_URL = 'https://api.spotify.com/v1';
@@ -831,11 +831,29 @@
 
                 const data = await response.json();
 
-                // Parse the response
-                if (data && data.artist && data.title) {
+                // Parse the response - support multiple API formats
+                let artist, title;
+
+                // Try miniplayer format: data.now.artist / data.now.title
+                if (data?.now?.artist && data?.now?.title) {
+                    artist = data.now.artist;
+                    title = data.now.title;
+                }
+                // Try direct format: data.artist / data.title
+                else if (data?.artist && data?.title) {
+                    artist = data.artist;
+                    title = data.title;
+                }
+                // Try alternative format: data.now.artistName / data.now.songTitle
+                else if (data?.now?.artistName && data?.now?.songTitle) {
+                    artist = data.now.artistName;
+                    title = data.now.songTitle;
+                }
+
+                if (artist && title) {
                     currentTrack = {
-                        artist: data.artist,
-                        title: data.title,
+                        artist: artist,
+                        title: title,
                         timestamp: new Date().toISOString()
                     };
 
