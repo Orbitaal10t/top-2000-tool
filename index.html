@@ -463,59 +463,62 @@
 
         /* Spotify-specific styling (volgens Spotify Design Guidelines) */
 
-        /* Spotify Configuration Card */
-        #spotifyConfig {
+        /* Admin & Spotify Configuration Cards */
+        #adminConfig,
+        #userSpotifyLogin {
             background: #191414;
             color: #FFFFFF;
         }
 
-        #spotifyConfig h2 {
+        #adminConfig h2,
+        #userSpotifyLogin h2 {
             color: #FFFFFF;
         }
 
-        #spotifyConfig p,
-        #spotifyConfig ol {
+        #adminConfig p,
+        #adminConfig ol,
+        #userSpotifyLogin p {
             color: #B3B3B3;
         }
 
-        #spotifyConfig strong {
+        #adminConfig strong {
             color: #FFFFFF;
         }
 
-        #spotifyConfig a {
+        #adminConfig a {
             color: #1DB954;
             text-decoration: none;
             font-weight: 700;
         }
 
-        #spotifyConfig a:hover {
+        #adminConfig a:hover {
             text-decoration: underline;
         }
 
-        #spotifyConfig .config-section {
+        #adminConfig .config-section {
             background: #282828;
         }
 
-        #spotifyConfig .config-section label {
+        #adminConfig .config-section label {
             color: #FFFFFF;
         }
 
-        #spotifyConfig .config-section input {
+        #adminConfig .config-section input {
             background: #121212;
             border: 1px solid #535353;
             color: #FFFFFF;
         }
 
-        #spotifyConfig .config-section input:focus {
+        #adminConfig .config-section input:focus {
             outline: none;
             border-color: #1DB954;
         }
 
-        #spotifyConfig .config-section input::placeholder {
+        #adminConfig .config-section input::placeholder {
             color: #6A6A6A;
         }
 
-        #spotifyConfig code {
+        #adminConfig code {
             background: #121212;
             color: #1DB954;
             padding: 4px 8px;
@@ -575,8 +578,9 @@
             box-shadow: 0 0 8px #1DB954;
         }
 
-        /* Spotify Logout Button */
-        #spotifyConfig .btn-danger,
+        /* Spotify Button Overrides */
+        #adminConfig .btn-secondary,
+        #userSpotifyLogin .btn-secondary,
         .spotify-status .btn-danger {
             background: transparent;
             color: #FFFFFF;
@@ -584,7 +588,8 @@
             border-radius: 500px;
         }
 
-        #spotifyConfig .btn-danger:hover:not(:disabled),
+        #adminConfig .btn-secondary:hover:not(:disabled),
+        #userSpotifyLogin .btn-secondary:hover:not(:disabled),
         .spotify-status .btn-danger:hover:not(:disabled) {
             border-color: #FFFFFF;
             transform: scale(1.04);
@@ -647,6 +652,12 @@
                         </div>
                     </div>
                 </div>
+
+                <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid #e0e0e0;">
+                    <button onclick="showAdminConfig()" class="btn btn-secondary btn-small">
+                        <i class="fa-solid fa-shield-halved"></i> Admin configuratie
+                    </button>
+                </div>
             </div>
 
             <!-- Main App (hidden until storage is chosen) -->
@@ -696,6 +707,12 @@
                 <button id="changeStorageBtn" class="btn btn-secondary btn-block">
                     Wijzig opslagmethode
                 </button>
+
+                <div style="text-align: center; margin-top: 12px;">
+                    <button onclick="showAdminConfig()" class="btn btn-secondary btn-small">
+                        <i class="fa-solid fa-shield-halved"></i> Admin
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -713,18 +730,18 @@
             <div id="savedTracksList"></div>
         </div>
 
-        <!-- Spotify Configuration (only for Spotify users) -->
-        <div id="spotifyConfig" class="card" style="display: none;">
-            <h2><i class="fa-solid fa-gear"></i> Spotify Configuratie</h2>
+        <!-- Admin Configuration (only shown when accessing admin panel) -->
+        <div id="adminConfig" class="card" style="display: none;">
+            <h2><i class="fa-solid fa-shield-halved"></i> Admin Configuratie</h2>
             <p style="margin-bottom: 16px; font-size: 14px;">
-                <strong>Let op:</strong> Je hebt een Spotify Developer App nodig. Volg deze stappen:
+                <strong>Voor beheerders:</strong> Stel de Spotify app in voor al je gebruikers.
             </p>
             <ol style="margin-left: 20px; margin-bottom: 16px; font-size: 14px; line-height: 1.6;">
                 <li>Ga naar <a href="https://developer.spotify.com/dashboard" target="_blank">Spotify Developer Dashboard</a></li>
                 <li>Maak een nieuwe app aan</li>
                 <li>Kopieer de <strong>Client ID</strong></li>
                 <li>Voeg deze <strong>Redirect URI</strong> toe: <code id="redirectUriDisplay"></code></li>
-                <li>Vul hieronder je Client ID in</li>
+                <li>Vul hieronder je Client ID in en sla op</li>
             </ol>
             <div class="config-section">
                 <label for="spotifyClientId"><strong>Spotify Client ID:</strong></label>
@@ -734,10 +751,32 @@
                     placeholder="Plak hier je Spotify Client ID"
                     value=""
                 />
-                <button id="saveConfigBtn" class="btn-spotify btn-block" style="margin-top: 12px;">
-                    Verbind met Spotify
+                <button id="saveClientIdBtn" class="btn-spotify btn-block" style="margin-top: 12px;">
+                    <i class="fa-solid fa-floppy-disk"></i> Opslaan
+                </button>
+                <button id="exitAdminBtn" class="btn btn-secondary btn-block" style="margin-top: 8px;">
+                    Terug naar hoofdmenu
                 </button>
             </div>
+        </div>
+
+        <!-- Spotify User Login (for regular users) -->
+        <div id="userSpotifyLogin" class="card" style="display: none;">
+            <h2><i class="fa-brands fa-spotify"></i> Inloggen met Spotify</h2>
+            <p style="margin-bottom: 16px; font-size: 14px; color: #B3B3B3;">
+                Log in met je Spotify account om nummers toe te voegen aan je playlist.
+            </p>
+            <div style="text-align: center; padding: 20px;">
+                <button id="spotifyLoginBtn" class="btn-spotify" style="margin-bottom: 16px;">
+                    <i class="fa-brands fa-spotify"></i> Inloggen met Spotify
+                </button>
+                <p style="font-size: 13px; color: #B3B3B3; margin-top: 16px;">
+                    <i class="fa-solid fa-info-circle"></i> Je hebt een gratis Spotify account nodig
+                </p>
+            </div>
+            <button id="backToStorageBtn" class="btn btn-secondary btn-block">
+                Terug naar opslagkeuze
+            </button>
         </div>
     </div>
 
@@ -831,8 +870,7 @@
             const clientId = getFromLocalStorage('spotifyClientId');
 
             if (!clientId) {
-                showAlert('Vul eerst je Spotify Client ID in bij Configuratie hieronder', 'warning');
-                document.getElementById('spotifyConfig').style.display = 'block';
+                showAlert('Spotify is nog niet geconfigureerd. Vraag de beheerder om de app in te stellen.', 'warning');
                 return;
             }
 
@@ -852,6 +890,15 @@
             });
 
             window.location.href = `${SPOTIFY_AUTH_URL}?${params.toString()}`;
+        }
+
+        async function loginWithSpotify() {
+            // Set storage method
+            storageMethod = 'spotify';
+            saveToLocalStorage('storageMethod', 'spotify');
+
+            // Initiate Spotify login
+            await initiateSpotifyLogin();
         }
 
         async function handleSpotifyCallback() {
@@ -907,8 +954,25 @@
                     localStorage.removeItem('spotifyCodeVerifier');
                     window.history.replaceState({}, document.title, window.location.pathname);
 
+                    // Set storage method if not already set
+                    if (!storageMethod) {
+                        storageMethod = 'spotify';
+                        saveToLocalStorage('storageMethod', 'spotify');
+                    }
+
                     showAlert('<i class="fa-solid fa-circle-check"></i> Succesvol verbonden met Spotify!', 'success');
+
+                    // Hide login screen and show main app
+                    document.getElementById('userSpotifyLogin').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'block';
+
                     await updateSpotifyStatus();
+
+                    // Start the app
+                    fetchNowPlaying();
+                    startPolling();
+                    renderTrackList();
+                    updateTrackCount();
 
                 } catch (error) {
                     console.error('Token exchange error:', error);
@@ -1014,12 +1078,19 @@
                 spotifyAccessToken = null;
                 spotifyRefreshToken = null;
                 spotifyTokenExpiry = null;
+                selectedPlaylistId = null;
 
                 localStorage.removeItem('spotifyAccessToken');
                 localStorage.removeItem('spotifyRefreshToken');
                 localStorage.removeItem('spotifyTokenExpiry');
+                localStorage.removeItem('selectedPlaylistId');
+                localStorage.removeItem('storageMethod');
 
-                updateSpotifyStatus();
+                // Go back to storage choice
+                storageMethod = null;
+                document.getElementById('mainApp').style.display = 'none';
+                document.getElementById('storageChoice').classList.add('active');
+
                 showAlert('Uitgelogd van Spotify', 'info');
             }
         }
@@ -1616,28 +1687,92 @@
         }
 
         // ============================================
+        // ADMIN CONFIGURATION
+        // ============================================
+        function showAdminConfig() {
+            // Hide all screens
+            document.getElementById('storageChoice').classList.remove('active');
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('userSpotifyLogin').style.display = 'none';
+
+            // Show admin config
+            document.getElementById('adminConfig').style.display = 'block';
+        }
+
+        function saveClientId() {
+            const clientId = document.getElementById('spotifyClientId').value.trim();
+
+            if (!clientId) {
+                showAlert('Vul een Client ID in', 'warning');
+                return;
+            }
+
+            saveToLocalStorage('spotifyClientId', clientId);
+            showAlert('<i class="fa-solid fa-circle-check"></i> Client ID opgeslagen! Gebruikers kunnen nu inloggen.', 'success');
+        }
+
+        function exitAdminConfig() {
+            document.getElementById('adminConfig').style.display = 'none';
+
+            // Go back to storage choice
+            if (!storageMethod) {
+                document.getElementById('storageChoice').classList.add('active');
+            } else {
+                document.getElementById('mainApp').style.display = 'block';
+            }
+        }
+
+        // ============================================
         // STORAGE CHOICE
         // ============================================
         async function chooseStorage(method) {
-            storageMethod = method;
-            saveToLocalStorage('storageMethod', method);
-
-            document.getElementById('storageChoice').classList.remove('active');
-            document.getElementById('mainApp').style.display = 'block';
-
             if (method === 'spotify') {
-                document.getElementById('spotifyConfig').style.display = 'block';
-                await updateSpotifyStatus();
-            } else {
-                document.getElementById('spotifyConfig').style.display = 'none';
-                showAlert('Lokale opslag actief. Let op: lijst is alleen zichtbaar op dit apparaat.', 'info');
-            }
+                // Check if Client ID is configured
+                const clientId = getFromLocalStorage('spotifyClientId');
 
-            // Start fetching now playing
-            fetchNowPlaying();
-            startPolling();
-            renderTrackList();
-            updateTrackCount();
+                if (!clientId) {
+                    showAlert('Spotify is nog niet geconfigureerd. Vraag de beheerder om de app in te stellen.', 'warning');
+                    return;
+                }
+
+                // Hide storage choice
+                document.getElementById('storageChoice').classList.remove('active');
+
+                // Check if already logged in
+                if (spotifyAccessToken) {
+                    // Already logged in, go to main app
+                    storageMethod = 'spotify';
+                    saveToLocalStorage('storageMethod', method);
+                    document.getElementById('mainApp').style.display = 'block';
+                    await updateSpotifyStatus();
+                    fetchNowPlaying();
+                    startPolling();
+                    renderTrackList();
+                    updateTrackCount();
+                } else {
+                    // Show login screen
+                    document.getElementById('userSpotifyLogin').style.display = 'block';
+                }
+            } else {
+                // Local storage
+                storageMethod = method;
+                saveToLocalStorage('storageMethod', method);
+
+                document.getElementById('storageChoice').classList.remove('active');
+                document.getElementById('mainApp').style.display = 'block';
+                showAlert('Lokale opslag actief. Let op: lijst is alleen zichtbaar op dit apparaat.', 'info');
+
+                // Start fetching now playing
+                fetchNowPlaying();
+                startPolling();
+                renderTrackList();
+                updateTrackCount();
+            }
+        }
+
+        function backToStorageChoice() {
+            document.getElementById('userSpotifyLogin').style.display = 'none';
+            document.getElementById('storageChoice').classList.add('active');
         }
 
         function changeStorage() {
@@ -1692,22 +1827,27 @@
 
             // Show appropriate screen
             if (storageMethod) {
-                document.getElementById('mainApp').style.display = 'block';
+                if (storageMethod === 'spotify' && !spotifyAccessToken) {
+                    // Spotify selected but not logged in - show login screen
+                    document.getElementById('userSpotifyLogin').style.display = 'block';
+                } else {
+                    // Show main app
+                    document.getElementById('mainApp').style.display = 'block';
 
-                if (storageMethod === 'spotify') {
-                    document.getElementById('spotifyConfig').style.display = 'block';
-                    await updateSpotifyStatus();
+                    if (storageMethod === 'spotify') {
+                        await updateSpotifyStatus();
 
-                    // If we have a selected playlist, sync it
-                    if (selectedPlaylistId && spotifyAccessToken) {
-                        await syncPlaylistToTrackList();
+                        // If we have a selected playlist, sync it
+                        if (selectedPlaylistId && spotifyAccessToken) {
+                            await syncPlaylistToTrackList();
+                        }
                     }
-                }
 
-                fetchNowPlaying();
-                startPolling();
-                renderTrackList();
-                updateTrackCount();
+                    fetchNowPlaying();
+                    startPolling();
+                    renderTrackList();
+                    updateTrackCount();
+                }
             } else {
                 document.getElementById('storageChoice').classList.add('active');
             }
@@ -1716,20 +1856,14 @@
             document.getElementById('addToListBtn').addEventListener('click', addTrackToList);
             document.getElementById('changeStorageBtn').addEventListener('click', changeStorage);
             document.getElementById('logoutBtn').addEventListener('click', logoutSpotify);
-            document.getElementById('saveConfigBtn').addEventListener('click', () => {
-                const clientId = document.getElementById('spotifyClientId').value.trim();
 
-                if (!clientId) {
-                    showAlert('Vul een Client ID in', 'warning');
-                    return;
-                }
+            // Admin config listeners
+            document.getElementById('saveClientIdBtn').addEventListener('click', saveClientId);
+            document.getElementById('exitAdminBtn').addEventListener('click', exitAdminConfig);
 
-                saveToLocalStorage('spotifyClientId', clientId);
-                showAlert('Client ID opgeslagen! Je kunt nu verbinden met Spotify.', 'success');
-
-                // Initiate login
-                initiateSpotifyLogin();
-            });
+            // User login listeners
+            document.getElementById('spotifyLoginBtn').addEventListener('click', loginWithSpotify);
+            document.getElementById('backToStorageBtn').addEventListener('click', backToStorageChoice);
 
             // Make functions global
             window.removeTrack = removeTrack;
@@ -1737,6 +1871,7 @@
             window.selectPlaylist = selectPlaylist;
             window.createNewPlaylist = createNewPlaylist;
             window.chooseStorage = chooseStorage;
+            window.showAdminConfig = showAdminConfig;
         }
 
         // Start the app
