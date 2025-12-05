@@ -24,7 +24,7 @@ De volgende icon formaten zijn vereist:
 
 Alle icons hebben:
 - Een gradient achtergrond (#667eea → #764ba2)
-- Een witte muzieknoot (Font Awesome music icon)
+- Een wit radio icon (Font Awesome fa-radio)
 - PNG formaat voor maximale compatibiliteit
 
 ## PWA Ondersteuning
