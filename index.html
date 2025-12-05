@@ -664,6 +664,53 @@
                 Terug naar opslagkeuze
             </button>
         </div>
+
+        <!-- Custom Client ID Setup (for users not authorized in admin app) -->
+        <div id="customClientSetup" class="card" style="display: none;">
+            <h2><i class="fa-solid fa-key"></i> Gebruik je eigen Spotify App</h2>
+            <p style="margin-bottom: 16px; font-size: 14px; color: #666;">
+                Je bent niet geauthoriseerd voor de gedeelde app. Geen probleem! Je kunt je eigen Spotify Developer App aanmaken.
+            </p>
+
+            <div class="alert alert-warning show">
+                <i class="fa-solid fa-info-circle"></i> <strong>Waarom zie ik dit?</strong><br>
+                De beheerder's Spotify app staat in Development Mode en je bent niet toegevoegd als test user.
+            </div>
+
+            <div class="info-box" style="margin-bottom: 20px;">
+                <strong>Stappen om je eigen Spotify App in te stellen:</strong>
+                <ol>
+                    <li>Ga naar <a href="https://developer.spotify.com/dashboard" target="_blank">Spotify Developer Dashboard</a></li>
+                    <li>Log in met je Spotify account (gratis account werkt ook!)</li>
+                    <li>Klik op "Create app"</li>
+                    <li>Vul een naam in (bijvoorbeeld "Mijn Top 2000 Tracker")</li>
+                    <li>Bij "Redirect URI" voeg toe: <code id="userRedirectUri"></code></li>
+                    <li>Selecteer de "Web API" checkbox</li>
+                    <li>Accepteer de terms en klik "Save"</li>
+                    <li>Kopieer je <strong>Client ID</strong> en plak deze hieronder</li>
+                </ol>
+            </div>
+
+            <div class="form-group">
+                <label for="userClientId">
+                    <i class="fa-brands fa-spotify"></i> Jouw Spotify Client ID
+                </label>
+                <input
+                    type="text"
+                    id="userClientId"
+                    placeholder="Plak hier je eigen Spotify Client ID"
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; font-family: 'Courier New', monospace;"
+                >
+            </div>
+
+            <button id="saveUserClientBtn" class="btn btn-primary btn-block" onclick="saveUserClientId()">
+                <i class="fa-solid fa-floppy-disk"></i> Opslaan en Inloggen
+            </button>
+
+            <button id="backFromCustomSetup" class="btn btn-secondary btn-block">
+                Terug
+            </button>
+        </div>
     </div>
 
     <script>
@@ -752,8 +799,19 @@
         // ============================================
         // SPOTIFY AUTHENTICATION
         // ============================================
+        function getActiveClientId() {
+            // First check if user has their own Client ID
+            const userClientId = getFromLocalStorage('userSpotifyClientId');
+            if (userClientId) {
+                return userClientId;
+            }
+
+            // Otherwise use admin Client ID
+            return getFromLocalStorage('spotifyClientId');
+        }
+
         async function initiateSpotifyLogin() {
-            const clientId = getFromLocalStorage('spotifyClientId');
+            const clientId = getActiveClientId();
 
             if (!clientId) {
                 showAlert('Spotify is nog niet geconfigureerd. Vraag de beheerder om de app in te stellen.', 'warning');
@@ -799,7 +857,7 @@
 
             if (code) {
                 const codeVerifier = getFromLocalStorage('spotifyCodeVerifier');
-                const clientId = getFromLocalStorage('spotifyClientId');
+                const clientId = getActiveClientId();
 
                 if (!codeVerifier || !clientId) {
                     showAlert('Authenticatie fout: verifier of client ID ontbreekt', 'error');
@@ -850,6 +908,7 @@
 
                     // Hide login screen and show main app
                     document.getElementById('userSpotifyLogin').style.display = 'none';
+                    document.getElementById('customClientSetup').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';
 
                     await updateSpotifyStatus();
@@ -868,7 +927,7 @@
         }
 
         async function refreshSpotifyToken() {
-            const clientId = getFromLocalStorage('spotifyClientId');
+            const clientId = getActiveClientId();
             const refreshToken = getFromLocalStorage('spotifyRefreshToken');
 
             if (!refreshToken || !clientId) {
@@ -1130,6 +1189,11 @@
                 }
             });
 
+            if (response.status === 403) {
+                handle403Error();
+                throw new Error('User not authorized for this Spotify app');
+            }
+
             if (!response.ok) {
                 throw new Error('Spotify search failed');
             }
@@ -1156,12 +1220,38 @@
                 }
             });
 
+            // Handle 403 Forbidden - user not authorized
+            if (response.status === 403) {
+                handle403Error();
+                throw new Error('User not authorized for this Spotify app');
+            }
+
             if (!response.ok) {
                 throw new Error('Failed to fetch playlists');
             }
 
             const data = await response.json();
             return data.items || [];
+        }
+
+        function handle403Error() {
+            // Clear admin client ID and tokens
+            localStorage.removeItem('spotifyAccessToken');
+            localStorage.removeItem('spotifyRefreshToken');
+            localStorage.removeItem('spotifyTokenExpiry');
+            spotifyAccessToken = null;
+            spotifyRefreshToken = null;
+            spotifyTokenExpiry = null;
+
+            // Show custom client setup screen
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('userSpotifyLogin').style.display = 'none';
+            document.getElementById('customClientSetup').style.display = 'block';
+
+            // Set redirect URI display
+            document.getElementById('userRedirectUri').textContent = REDIRECT_URI;
+
+            showAlert('<i class="fa-solid fa-triangle-exclamation"></i> Je bent niet geauthoriseerd voor deze app. Gebruik je eigen Spotify Client ID.', 'warning');
         }
 
         async function createPlaylist(name) {
@@ -1177,6 +1267,11 @@
                     'Authorization': `Bearer ${spotifyAccessToken}`
                 }
             });
+
+            if (userResponse.status === 403) {
+                handle403Error();
+                throw new Error('User not authorized for this Spotify app');
+            }
 
             if (!userResponse.ok) {
                 throw new Error('Failed to get user info');
@@ -1198,6 +1293,11 @@
                     public: false
                 })
             });
+
+            if (response.status === 403) {
+                handle403Error();
+                throw new Error('User not authorized for this Spotify app');
+            }
 
             if (!response.ok) {
                 throw new Error('Failed to create playlist');
@@ -1224,6 +1324,11 @@
                 })
             });
 
+            if (response.status === 403) {
+                handle403Error();
+                throw new Error('User not authorized for this Spotify app');
+            }
+
             if (!response.ok) {
                 throw new Error('Failed to add to playlist');
             }
@@ -1247,6 +1352,11 @@
                         'Authorization': `Bearer ${spotifyAccessToken}`
                     }
                 });
+
+                if (response.status === 403) {
+                    handle403Error();
+                    throw new Error('User not authorized for this Spotify app');
+                }
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch playlist tracks');
@@ -1589,8 +1699,33 @@
             }
         }
 
+        function saveUserClientId() {
+            const clientId = document.getElementById('userClientId').value.trim();
+
+            if (!clientId) {
+                showAlert('Vul een Client ID in', 'warning');
+                return;
+            }
+
+            // Save user's own Client ID
+            saveToLocalStorage('userSpotifyClientId', clientId);
+
+            showAlert('<i class="fa-solid fa-circle-check"></i> Client ID opgeslagen! Je wordt doorgeleid naar Spotify...', 'success');
+
+            // Initiate login with user's client ID
+            setTimeout(() => {
+                initiateSpotifyLogin();
+            }, 1500);
+        }
+
         function backToStorageChoice() {
             document.getElementById('userSpotifyLogin').style.display = 'none';
+            document.getElementById('customClientSetup').style.display = 'none';
+            document.getElementById('storageChoice').classList.add('active');
+        }
+
+        function backFromCustomSetup() {
+            document.getElementById('customClientSetup').style.display = 'none';
             document.getElementById('storageChoice').classList.add('active');
         }
 
@@ -1676,6 +1811,7 @@
             // User login listeners
             document.getElementById('spotifyLoginBtn').addEventListener('click', loginWithSpotify);
             document.getElementById('backToStorageBtn').addEventListener('click', backToStorageChoice);
+            document.getElementById('backFromCustomSetup').addEventListener('click', backFromCustomSetup);
 
             // Make functions global
             window.removeTrack = removeTrack;
@@ -1683,6 +1819,7 @@
             window.selectPlaylist = selectPlaylist;
             window.createNewPlaylist = createNewPlaylist;
             window.chooseStorage = chooseStorage;
+            window.saveUserClientId = saveUserClientId;
         }
 
         // Start the app
