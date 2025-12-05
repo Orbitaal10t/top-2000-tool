@@ -775,7 +775,7 @@
         function showAlert(message, type = 'info') {
             const alert = document.getElementById('alert');
             alert.className = `alert alert-${type} show`;
-            alert.textContent = message;
+            alert.innerHTML = message;
             setTimeout(() => {
                 alert.classList.remove('show');
             }, 5000);
