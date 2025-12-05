@@ -1588,6 +1588,21 @@
             const container = document.getElementById('savedTracksList');
             const card = document.getElementById('savedTracksCard');
 
+            // Check if a playlist is selected
+            if (!selectedPlaylistId) {
+                // No playlist selected - show placeholder
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fa-solid fa-list-music"></i></div>
+                        <p>Selecteer eerst een playlist</p>
+                        <p style="font-size: 14px; margin-top: 8px;">Hier komen de nummers in te staan van je geselecteerde playlist</p>
+                    </div>
+                `;
+                card.style.display = 'block';
+                return;
+            }
+
+            // Playlist is selected
             if (tracks.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
