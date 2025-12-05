@@ -463,67 +463,18 @@
 
         /* Spotify-specific styling (volgens Spotify Design Guidelines) */
 
-        /* Admin & Spotify Configuration Cards */
-        #adminConfig,
+        /* Spotify User Login Card */
         #userSpotifyLogin {
             background: #191414;
             color: #FFFFFF;
         }
 
-        #adminConfig h2,
         #userSpotifyLogin h2 {
             color: #FFFFFF;
         }
 
-        #adminConfig p,
-        #adminConfig ol,
         #userSpotifyLogin p {
             color: #B3B3B3;
-        }
-
-        #adminConfig strong {
-            color: #FFFFFF;
-        }
-
-        #adminConfig a {
-            color: #1DB954;
-            text-decoration: none;
-            font-weight: 700;
-        }
-
-        #adminConfig a:hover {
-            text-decoration: underline;
-        }
-
-        #adminConfig .config-section {
-            background: #282828;
-        }
-
-        #adminConfig .config-section label {
-            color: #FFFFFF;
-        }
-
-        #adminConfig .config-section input {
-            background: #121212;
-            border: 1px solid #535353;
-            color: #FFFFFF;
-        }
-
-        #adminConfig .config-section input:focus {
-            outline: none;
-            border-color: #1DB954;
-        }
-
-        #adminConfig .config-section input::placeholder {
-            color: #6A6A6A;
-        }
-
-        #adminConfig code {
-            background: #121212;
-            color: #1DB954;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
         }
 
         /* Spotify Buttons - volgens Spotify guidelines */
@@ -579,7 +530,6 @@
         }
 
         /* Spotify Button Overrides */
-        #adminConfig .btn-secondary,
         #userSpotifyLogin .btn-secondary,
         .spotify-status .btn-danger {
             background: transparent;
@@ -588,7 +538,6 @@
             border-radius: 500px;
         }
 
-        #adminConfig .btn-secondary:hover:not(:disabled),
         #userSpotifyLogin .btn-secondary:hover:not(:disabled),
         .spotify-status .btn-danger:hover:not(:disabled) {
             border-color: #FFFFFF;
@@ -653,11 +602,6 @@
                     </div>
                 </div>
 
-                <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid #e0e0e0;">
-                    <button onclick="showAdminConfig()" class="btn btn-secondary btn-small">
-                        <i class="fa-solid fa-shield-halved"></i> Admin configuratie
-                    </button>
-                </div>
             </div>
 
             <!-- Main App (hidden until storage is chosen) -->
@@ -707,12 +651,6 @@
                 <button id="changeStorageBtn" class="btn btn-secondary btn-block">
                     Wijzig opslagmethode
                 </button>
-
-                <div style="text-align: center; margin-top: 12px;">
-                    <button onclick="showAdminConfig()" class="btn btn-secondary btn-small">
-                        <i class="fa-solid fa-shield-halved"></i> Admin
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -728,36 +666,6 @@
             <h2>Mijn Stemlijst</h2>
             <div class="track-count" id="trackCount">0 nummers</div>
             <div id="savedTracksList"></div>
-        </div>
-
-        <!-- Admin Configuration (only shown when accessing admin panel) -->
-        <div id="adminConfig" class="card" style="display: none;">
-            <h2><i class="fa-solid fa-shield-halved"></i> Admin Configuratie</h2>
-            <p style="margin-bottom: 16px; font-size: 14px;">
-                <strong>Voor beheerders:</strong> Stel de Spotify app in voor al je gebruikers.
-            </p>
-            <ol style="margin-left: 20px; margin-bottom: 16px; font-size: 14px; line-height: 1.6;">
-                <li>Ga naar <a href="https://developer.spotify.com/dashboard" target="_blank">Spotify Developer Dashboard</a></li>
-                <li>Maak een nieuwe app aan</li>
-                <li>Kopieer de <strong>Client ID</strong></li>
-                <li>Voeg deze <strong>Redirect URI</strong> toe: <code id="redirectUriDisplay"></code></li>
-                <li>Vul hieronder je Client ID in en sla op</li>
-            </ol>
-            <div class="config-section">
-                <label for="spotifyClientId"><strong>Spotify Client ID:</strong></label>
-                <input
-                    type="text"
-                    id="spotifyClientId"
-                    placeholder="Plak hier je Spotify Client ID"
-                    value=""
-                />
-                <button id="saveClientIdBtn" class="btn-spotify btn-block" style="margin-top: 12px;">
-                    <i class="fa-solid fa-floppy-disk"></i> Opslaan
-                </button>
-                <button id="exitAdminBtn" class="btn btn-secondary btn-block" style="margin-top: 8px;">
-                    Terug naar hoofdmenu
-                </button>
-            </div>
         </div>
 
         <!-- Spotify User Login (for regular users) -->
@@ -1687,42 +1595,6 @@
         }
 
         // ============================================
-        // ADMIN CONFIGURATION
-        // ============================================
-        function showAdminConfig() {
-            // Hide all screens
-            document.getElementById('storageChoice').classList.remove('active');
-            document.getElementById('mainApp').style.display = 'none';
-            document.getElementById('userSpotifyLogin').style.display = 'none';
-
-            // Show admin config
-            document.getElementById('adminConfig').style.display = 'block';
-        }
-
-        function saveClientId() {
-            const clientId = document.getElementById('spotifyClientId').value.trim();
-
-            if (!clientId) {
-                showAlert('Vul een Client ID in', 'warning');
-                return;
-            }
-
-            saveToLocalStorage('spotifyClientId', clientId);
-            showAlert('<i class="fa-solid fa-circle-check"></i> Client ID opgeslagen! Gebruikers kunnen nu inloggen.', 'success');
-        }
-
-        function exitAdminConfig() {
-            document.getElementById('adminConfig').style.display = 'none';
-
-            // Go back to storage choice
-            if (!storageMethod) {
-                document.getElementById('storageChoice').classList.add('active');
-            } else {
-                document.getElementById('mainApp').style.display = 'block';
-            }
-        }
-
-        // ============================================
         // STORAGE CHOICE
         // ============================================
         async function chooseStorage(method) {
@@ -1804,9 +1676,6 @@
         // INITIALIZATION
         // ============================================
         async function init() {
-            // Display redirect URI for user
-            document.getElementById('redirectUriDisplay').textContent = REDIRECT_URI;
-
             // Load saved data
             storageMethod = getFromLocalStorage('storageMethod');
             spotifyAccessToken = getFromLocalStorage('spotifyAccessToken');
@@ -1814,10 +1683,15 @@
             spotifyTokenExpiry = getFromLocalStorage('spotifyTokenExpiry');
             selectedPlaylistId = getFromLocalStorage('selectedPlaylistId');
 
-            // Load saved Spotify Client ID
-            const savedClientId = getFromLocalStorage('spotifyClientId');
-            if (savedClientId) {
-                document.getElementById('spotifyClientId').value = savedClientId;
+            // Check for Client ID in URL parameters (shared link from admin)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlClientId = urlParams.get('client_id');
+            if (urlClientId) {
+                // Save Client ID from URL
+                saveToLocalStorage('spotifyClientId', urlClientId);
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                showAlert('<i class="fa-solid fa-circle-check"></i> App geconfigureerd! Je kunt nu inloggen met Spotify.', 'success');
             }
 
             // Check for OAuth callback
@@ -1857,10 +1731,6 @@
             document.getElementById('changeStorageBtn').addEventListener('click', changeStorage);
             document.getElementById('logoutBtn').addEventListener('click', logoutSpotify);
 
-            // Admin config listeners
-            document.getElementById('saveClientIdBtn').addEventListener('click', saveClientId);
-            document.getElementById('exitAdminBtn').addEventListener('click', exitAdminConfig);
-
             // User login listeners
             document.getElementById('spotifyLoginBtn').addEventListener('click', loginWithSpotify);
             document.getElementById('backToStorageBtn').addEventListener('click', backToStorageChoice);
@@ -1871,7 +1741,6 @@
             window.selectPlaylist = selectPlaylist;
             window.createNewPlaylist = createNewPlaylist;
             window.chooseStorage = chooseStorage;
-            window.showAdminConfig = showAdminConfig;
         }
 
         // Start the app
