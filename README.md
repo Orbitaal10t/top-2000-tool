@@ -4,7 +4,7 @@ Een single-page HTML applicatie om nummers van NPO Radio 2 te tracken en op te s
 
 ## ✨ Features
 
-- 🎵 **Live Now Playing**: Zie welk nummer er nu op NPO Radio 2 wordt afgespeeld
+- 🎵 **Live Now Playing**: Zie welk nummer er nu op NPO Radio 2 wordt afgespeeld 
 - 📝 **Stemlijst**: Voeg nummers toe aan je persoonlijke lijst
 - 🎧 **Spotify Integratie**: Automatisch toevoegen aan je Spotify liked songs (aanbevolen)
 - 💾 **Lokale Opslag**: Of gebruik localStorage als fallback
