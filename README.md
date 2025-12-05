@@ -21,8 +21,6 @@ Een single-page HTML applicatie om nummers van NPO Radio 2 te tracken en op te s
 3. Log in bij Spotify en geef de app toegang
 4. Klaar! Voeg nummers toe terwijl je luistert
 
-**Let op**: De Spotify Client ID is globaal geconfigureerd via GitHub Secrets en werkt op alle apparaten!
-
 ### Voor Developers / Fork Owners
 
 Als je je eigen versie van deze app host, moet je een Spotify Developer App aanmaken en de Client ID configureren:
@@ -37,53 +35,45 @@ Als je je eigen versie van deze app host, moet je een Spotify Developer App aanm
 4. Vul in:
    - **App name**: `NPO Radio 2 Tracker` (of een eigen naam)
    - **App description**: `Personal app to track NPO Radio 2 songs`
-   - **Redirect URI**: Voeg deze toe (zie stap 2)
+   - **Redirect URI**: De URL waar je de app host + `/index.html`
+     - Lokaal: `http://localhost:8000/index.html`
+     - GitHub Pages: `https://jouwgebruikersnaam.github.io/repository/index.html`
+     - Eigen domein: `https://jouwdomein.nl/index.html`
    - **APIs used**: Selecteer **"Web API"**
 5. Accepteer de terms en klik op **"Save"**
+6. Kopieer je **Client ID** (je vindt deze op de app detail pagina)
 
-### Stap 2: Configureer de Redirect URI
+**Let op**: Je hebt GEEN Client Secret nodig! We gebruiken PKCE voor veilige authenticatie.
 
-De redirect URI is de URL waar je de app host. Dit kan zijn:
+### Stap 2: Configureer de App
 
-#### Voor lokaal testen:
-```
-http://localhost:8000/index.html
-```
+**Optie A: Rechtstreeks in config.js (Aanbevolen)** ✅
 
-#### Voor GitHub Pages:
-```
-https://jouwgebruikersnaam.github.io/jouwrepository/index.html
-```
+1. Kopieer `config.example.js` naar `config.js`:
+   ```bash
+   cp config.example.js config.js
+   ```
+2. Open `config.js` en vul je Client ID in:
+   ```javascript
+   SPOTIFY_CLIENT_ID: 'jouw-echte-client-id-hier',
+   ```
+3. Commit en push `config.js` naar je repository
+4. Klaar! 🎉
 
-#### Voor eigen domein:
-```
-https://jouwdomein.nl/index.html
-```
+**Waarom is dit veilig?**
+- ✅ Spotify Client ID is expliciet ontworpen om publiek te zijn
+- ✅ De beveiliging zit in PKCE (Proof Key for Code Exchange)
+- ✅ Er is geen Client Secret nodig of gebruikt
+- ✅ Elke gebruiker die je website bezoekt kan de Client ID toch zien
 
-**Belangrijk**:
-- Voeg de **exacte** URL toe inclusief het pad naar index.html
-- De applicatie toont de juiste redirect URI bovenaan de configuratie sectie
-- Je kunt meerdere redirect URIs toevoegen voor verschillende omgevingen
+**Optie B: Via de App zelf (Geen commit nodig)**
 
-### Stap 3: Configureer GitHub Secret
+1. Open de app in je browser
+2. Als de Client ID ontbreekt, verschijnt automatisch een setup scherm
+3. Volg de instructies en plak je Client ID in de app
+4. De app slaat deze op in je browser (localStorage)
 
-1. In je Spotify app dashboard, klik op **"Settings"**
-2. Kopieer de **Client ID** (lange string met letters en cijfers)
-3. **Let op**: Je hebt GEEN Client Secret nodig! (We gebruiken PKCE)
-4. Ga naar je GitHub repository → **Settings** → **Secrets and variables** → **Actions**
-5. Klik op **"New repository secret"**
-6. Vul in:
-   - **Name**: `SPOTIFY_CLIENT_ID`
-   - **Secret**: Plak hier je Spotify Client ID
-7. Klik op **"Add secret"**
-
-### Stap 4: Deploy de app
-
-1. Push naar `main` branch om de deployment te triggeren
-2. GitHub Actions injecteert automatisch je Client ID
-3. Klaar! De app is nu geconfigureerd en werkt op alle apparaten
-
-Voor meer details, zie [admin.html](admin.html) voor uitgebreide setup instructies.
+Deze methode werkt, maar je moet de Client ID op elk apparaat opnieuw invoeren.
 
 ## 🌐 De Applicatie Hosten
 

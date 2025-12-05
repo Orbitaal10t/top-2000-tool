@@ -20,11 +20,6 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SSH_PORT || 22 }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Inject Spotify Client ID
-        run: |
-          # Replace placeholder with actual Client ID from GitHub Secrets
-          sed -i "s/SPOTIFY_CLIENT_ID_PLACEHOLDER/${{ secrets.SPOTIFY_CLIENT_ID }}/g" index.html
-
       - name: Create deployment directory
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 22 }} -o StrictHostKeyChecking=no \

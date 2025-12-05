@@ -1,0 +1,12 @@
+# User-specific configuration
+config.js
+
+# macOS
+.DS_Store
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
