@@ -645,25 +645,6 @@
             <div class="track-count" id="trackCount">0 nummers</div>
             <div id="savedTracksList"></div>
         </div>
-
-        <!-- Spotify User Login (for regular users) -->
-        <div id="userSpotifyLogin" class="card" style="display: none;">
-            <h2><i class="fa-brands fa-spotify"></i> Inloggen met Spotify</h2>
-            <p style="margin-bottom: 16px; font-size: 14px; color: #B3B3B3;">
-                Log in met je Spotify account om nummers toe te voegen aan je playlist.
-            </p>
-            <div style="text-align: center; padding: 20px;">
-                <button id="spotifyLoginBtn" class="btn-spotify" style="margin-bottom: 16px;">
-                    <i class="fa-brands fa-spotify"></i> Inloggen met Spotify
-                </button>
-                <p style="font-size: 13px; color: #B3B3B3; margin-top: 16px;">
-                    <i class="fa-solid fa-info-circle"></i> Je hebt een gratis Spotify account nodig
-                </p>
-            </div>
-            <button id="backToStorageBtn" class="btn btn-secondary btn-block">
-                Terug naar opslagkeuze
-            </button>
-        </div>
     </div>
 
     <script>
@@ -778,15 +759,6 @@
             window.location.href = `${SPOTIFY_AUTH_URL}?${params.toString()}`;
         }
 
-        async function loginWithSpotify() {
-            // Set storage method
-            storageMethod = 'spotify';
-            saveToLocalStorage('storageMethod', 'spotify');
-
-            // Initiate Spotify login
-            await initiateSpotifyLogin();
-        }
-
         async function handleSpotifyCallback() {
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
@@ -848,8 +820,8 @@
 
                     showAlert('<i class="fa-solid fa-circle-check"></i> Succesvol verbonden met Spotify!', 'success');
 
-                    // Hide login screen and show main app
-                    document.getElementById('userSpotifyLogin').style.display = 'none';
+                    // Show main app
+                    document.getElementById('storageChoice').classList.remove('active');
                     document.getElementById('mainApp').style.display = 'block';
 
                     await updateSpotifyStatus();
@@ -1569,29 +1541,27 @@
                 return;
             }
 
-            // Hide storage choice
-            document.getElementById('storageChoice').classList.remove('active');
-
             // Check if already logged in
             if (spotifyAccessToken) {
                 // Already logged in, go to main app
                 storageMethod = 'spotify';
                 saveToLocalStorage('storageMethod', 'spotify');
+
+                // Hide storage choice
+                document.getElementById('storageChoice').classList.remove('active');
                 document.getElementById('mainApp').style.display = 'block';
+
                 await updateSpotifyStatus();
                 fetchNowPlaying();
                 startPolling();
                 renderTrackList();
                 updateTrackCount();
             } else {
-                // Show login screen
-                document.getElementById('userSpotifyLogin').style.display = 'block';
+                // Not logged in - start Spotify login directly
+                storageMethod = 'spotify';
+                saveToLocalStorage('storageMethod', 'spotify');
+                await initiateSpotifyLogin();
             }
-        }
-
-        function backToStorageChoice() {
-            document.getElementById('userSpotifyLogin').style.display = 'none';
-            document.getElementById('storageChoice').classList.add('active');
         }
 
         // ============================================
@@ -1639,28 +1609,23 @@
             }
 
             // Show appropriate screen
-            if (storageMethod && storageMethod === 'spotify') {
-                if (!spotifyAccessToken) {
-                    // Spotify selected but not logged in - show login screen
-                    document.getElementById('userSpotifyLogin').style.display = 'block';
-                } else {
-                    // Show main app
-                    document.getElementById('mainApp').style.display = 'block';
+            if (storageMethod && storageMethod === 'spotify' && spotifyAccessToken) {
+                // Spotify selected and logged in - show main app
+                document.getElementById('mainApp').style.display = 'block';
 
-                    await updateSpotifyStatus();
+                await updateSpotifyStatus();
 
-                    // If we have a selected playlist, sync it
-                    if (selectedPlaylistId && spotifyAccessToken) {
-                        await syncPlaylistToTrackList();
-                    }
-
-                    fetchNowPlaying();
-                    startPolling();
-                    renderTrackList();
-                    updateTrackCount();
+                // If we have a selected playlist, sync it
+                if (selectedPlaylistId) {
+                    await syncPlaylistToTrackList();
                 }
+
+                fetchNowPlaying();
+                startPolling();
+                renderTrackList();
+                updateTrackCount();
             } else {
-                // No storage method or local storage - force user to choose Spotify
+                // No storage method, local storage, or not logged in - show storage choice
                 if (storageMethod === 'local') {
                     // Clear old local storage method
                     localStorage.removeItem('storageMethod');
@@ -1672,10 +1637,6 @@
             // Event listeners
             document.getElementById('addToListBtn').addEventListener('click', addTrackToList);
             document.getElementById('logoutBtn').addEventListener('click', logoutSpotify);
-
-            // User login listeners
-            document.getElementById('spotifyLoginBtn').addEventListener('click', loginWithSpotify);
-            document.getElementById('backToStorageBtn').addEventListener('click', backToStorageChoice);
 
             // Make functions global
             window.removeTrack = removeTrack;
