@@ -1,6 +1,6 @@
 # NPO Radio 2 - Now Playing Tracker
 
-Een single-page HTML applicatie om nummers van NPO Radio 2 te tracken en op te slaan voor de Top 2000 stemming.
+Een single-page HTML applicatie om nummers van NPO Radio 2 te tracken en op te slaan voor de Top 2000 stemming. 
 
 ## ✨ Features
 
