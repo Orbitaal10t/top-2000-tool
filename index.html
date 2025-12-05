@@ -568,38 +568,20 @@
 
             <!-- Storage Choice Screen (shown on first visit) -->
             <div id="storageChoice" class="storage-choice">
-                <h2>Kies je opslagmethode</h2>
-                <p>Waar wil je je nummers bewaren?</p>
+                <h2>Log in met Spotify</h2>
+                <p>Deze app vereist een Spotify account om je nummers op te slaan.</p>
 
                 <div class="recommendation">
-                    <strong><i class="fa-solid fa-lightbulb"></i> Aanbeveling:</strong> Wij raden Spotify aan voor de beste ervaring en privacy. Je nummers blijven privé, synchroniseren tussen al je apparaten, en je kunt ze direct afspelen!
+                    <strong><i class="fa-solid fa-lightbulb"></i> Voordelen:</strong> Je nummers blijven privé in je eigen account, synchroniseren tussen al je apparaten, en je kunt ze direct afspelen!
                 </div>
 
-                <div class="storage-options">
-                    <div class="storage-option recommended" onclick="chooseStorage('spotify')">
-                        <h3>
-                            <i class="fa-brands fa-spotify"></i> Spotify
-                            <span class="badge">Aanbevolen</span>
-                        </h3>
-                        <div class="pros-cons">
-                            <div class="pro"><i class="fa-solid fa-check"></i> Sync tussen al je apparaten</div>
-                            <div class="pro"><i class="fa-solid fa-check"></i> Altijd privé (eigen account)</div>
-                            <div class="pro"><i class="fa-solid fa-check"></i> Direct afspelen via Spotify</div>
-                            <div class="pro"><i class="fa-solid fa-check"></i> Permanent opgeslagen</div>
-                            <div class="con"><i class="fa-solid fa-xmark"></i> Vereist Spotify account (gratis)</div>
-                        </div>
-                    </div>
-
-                    <div class="storage-option" onclick="chooseStorage('local')">
-                        <h3><i class="fa-solid fa-hard-drive"></i> Lokaal</h3>
-                        <div class="pros-cons">
-                            <div class="pro"><i class="fa-solid fa-check"></i> Geen account nodig</div>
-                            <div class="pro"><i class="fa-solid fa-check"></i> Werkt offline</div>
-                            <div class="con"><i class="fa-solid fa-xmark"></i> Alleen op dit apparaat + browser</div>
-                            <div class="con"><i class="fa-solid fa-xmark"></i> Niet privé bij gedeeld apparaat</div>
-                            <div class="con"><i class="fa-solid fa-xmark"></i> Verdwijnt bij cache wissen</div>
-                        </div>
-                    </div>
+                <div style="text-align: center; padding: 20px;">
+                    <button class="btn-spotify" onclick="chooseStorage('spotify')">
+                        <i class="fa-brands fa-spotify"></i> Inloggen met Spotify
+                    </button>
+                    <p style="font-size: 13px; color: #666; margin-top: 16px;">
+                        <i class="fa-solid fa-info-circle"></i> Je hebt een gratis Spotify account nodig
+                    </p>
                 </div>
 
             </div>
@@ -646,10 +628,6 @@
                 <!-- Add to List Button -->
                 <button id="addToListBtn" class="btn btn-primary btn-block" disabled>
                     <span id="addBtnText">Voeg toe aan mijn stemlijst</span>
-                </button>
-
-                <button id="changeStorageBtn" class="btn btn-secondary btn-block">
-                    Wijzig opslagmethode
                 </button>
             </div>
         </div>
@@ -1332,55 +1310,37 @@
         }
 
         async function addTrack(track) {
-            // Handle based on storage method
-            if (storageMethod === 'spotify') {
-                if (!spotifyAccessToken) {
-                    showAlert('Je bent niet verbonden met Spotify. Log eerst in!', 'warning');
-                    await initiateSpotifyLogin();
-                    return;
-                }
-
-                if (!selectedPlaylistId) {
-                    showAlert('Kies eerst een playlist!', 'warning');
-                    return;
-                }
-
-                // Search for track on Spotify
-                const spotifyTrack = await searchSpotifyTrack(track.artist, track.title);
-
-                if (!spotifyTrack) {
-                    showAlert('Nummer niet gevonden op Spotify.', 'error');
-                    return;
-                }
-
-                // Add to Spotify playlist
-                await addToSpotifyPlaylist(selectedPlaylistId, spotifyTrack.uri);
-                showAlert('<i class="fa-solid fa-circle-check"></i> Nummer toegevoegd aan je Spotify playlist!', 'success');
-
-                // Refresh the track list from Spotify
-                await syncPlaylistToTrackList();
-            } else {
-                // Local storage only
-                const localTracks = getFromLocalStorage('top2000lijst') || [];
-
-                // Check for duplicates
-                const isDuplicate = localTracks.some(t =>
-                    t.artist.toLowerCase() === track.artist.toLowerCase() &&
-                    t.title.toLowerCase() === track.title.toLowerCase()
-                );
-
-                if (isDuplicate) {
-                    showAlert('Dit nummer staat al in je lijst!', 'warning');
-                    return;
-                }
-
-                localTracks.push(track);
-                saveToLocalStorage('top2000lijst', localTracks);
-                showAlert('<i class="fa-solid fa-circle-check"></i> Nummer toegevoegd aan je lokale lijst!', 'success');
-
-                renderTrackList();
-                updateTrackCount();
+            // Only Spotify is supported
+            if (storageMethod !== 'spotify') {
+                showAlert('Alleen Spotify wordt ondersteund. Log in met Spotify om door te gaan.', 'warning');
+                return;
             }
+
+            if (!spotifyAccessToken) {
+                showAlert('Je bent niet verbonden met Spotify. Log eerst in!', 'warning');
+                await initiateSpotifyLogin();
+                return;
+            }
+
+            if (!selectedPlaylistId) {
+                showAlert('Kies eerst een playlist!', 'warning');
+                return;
+            }
+
+            // Search for track on Spotify
+            const spotifyTrack = await searchSpotifyTrack(track.artist, track.title);
+
+            if (!spotifyTrack) {
+                showAlert('Nummer niet gevonden op Spotify.', 'error');
+                return;
+            }
+
+            // Add to Spotify playlist
+            await addToSpotifyPlaylist(selectedPlaylistId, spotifyTrack.uri);
+            showAlert('<i class="fa-solid fa-circle-check"></i> Nummer toegevoegd aan je Spotify playlist!', 'success');
+
+            // Refresh the track list from Spotify
+            await syncPlaylistToTrackList();
         }
 
         async function removeTrack(index) {
@@ -1388,40 +1348,36 @@
                 return;
             }
 
-            if (storageMethod === 'spotify' && selectedPlaylistId) {
-                // Get playlist tracks to find the track to remove
-                const playlistTracks = await getPlaylistTracks(selectedPlaylistId);
+            // Only Spotify is supported
+            if (storageMethod !== 'spotify' || !selectedPlaylistId) {
+                showAlert('Alleen Spotify wordt ondersteund.', 'warning');
+                return;
+            }
 
-                if (index >= 0 && index < playlistTracks.length) {
-                    const trackToRemove = playlistTracks[index];
-                    const trackUri = trackToRemove.track.uri;
+            // Get playlist tracks to find the track to remove
+            const playlistTracks = await getPlaylistTracks(selectedPlaylistId);
 
-                    // Remove from Spotify playlist
-                    const isValid = await ensureValidToken();
-                    if (isValid) {
-                        await fetch(`${SPOTIFY_API_URL}/playlists/${selectedPlaylistId}/tracks`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Authorization': `Bearer ${spotifyAccessToken}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                tracks: [{ uri: trackUri }]
-                            })
-                        });
+            if (index >= 0 && index < playlistTracks.length) {
+                const trackToRemove = playlistTracks[index];
+                const trackUri = trackToRemove.track.uri;
 
-                        showAlert('Nummer verwijderd uit playlist', 'info');
-                        await syncPlaylistToTrackList();
-                    }
+                // Remove from Spotify playlist
+                const isValid = await ensureValidToken();
+                if (isValid) {
+                    await fetch(`${SPOTIFY_API_URL}/playlists/${selectedPlaylistId}/tracks`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${spotifyAccessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            tracks: [{ uri: trackUri }]
+                        })
+                    });
+
+                    showAlert('Nummer verwijderd uit playlist', 'info');
+                    await syncPlaylistToTrackList();
                 }
-            } else {
-                // Local storage
-                const tracks = getFromLocalStorage('top2000lijst') || [];
-                tracks.splice(index, 1);
-                saveToLocalStorage('top2000lijst', tracks);
-                renderTrackList();
-                updateTrackCount();
-                showAlert('Nummer verwijderd', 'info');
             }
         }
 
@@ -1599,61 +1555,43 @@
         // STORAGE CHOICE
         // ============================================
         async function chooseStorage(method) {
-            if (method === 'spotify') {
-                // Check if Client ID is configured
-                const clientId = getFromLocalStorage('spotifyClientId');
+            // Only Spotify is supported
+            if (method !== 'spotify') {
+                showAlert('Alleen Spotify wordt ondersteund.', 'warning');
+                return;
+            }
 
-                if (!clientId) {
-                    showAlert('Spotify is nog niet geconfigureerd. Vraag de beheerder om de app in te stellen.', 'warning');
-                    return;
-                }
+            // Check if Client ID is configured
+            const clientId = getFromLocalStorage('spotifyClientId');
 
-                // Hide storage choice
-                document.getElementById('storageChoice').classList.remove('active');
+            if (!clientId) {
+                showAlert('Spotify is nog niet geconfigureerd. Vraag de beheerder om de app in te stellen.', 'warning');
+                return;
+            }
 
-                // Check if already logged in
-                if (spotifyAccessToken) {
-                    // Already logged in, go to main app
-                    storageMethod = 'spotify';
-                    saveToLocalStorage('storageMethod', method);
-                    document.getElementById('mainApp').style.display = 'block';
-                    await updateSpotifyStatus();
-                    fetchNowPlaying();
-                    startPolling();
-                    renderTrackList();
-                    updateTrackCount();
-                } else {
-                    // Show login screen
-                    document.getElementById('userSpotifyLogin').style.display = 'block';
-                }
-            } else {
-                // Local storage
-                storageMethod = method;
-                saveToLocalStorage('storageMethod', method);
+            // Hide storage choice
+            document.getElementById('storageChoice').classList.remove('active');
 
-                document.getElementById('storageChoice').classList.remove('active');
+            // Check if already logged in
+            if (spotifyAccessToken) {
+                // Already logged in, go to main app
+                storageMethod = 'spotify';
+                saveToLocalStorage('storageMethod', 'spotify');
                 document.getElementById('mainApp').style.display = 'block';
-                showAlert('Lokale opslag actief. Let op: lijst is alleen zichtbaar op dit apparaat.', 'info');
-
-                // Start fetching now playing
+                await updateSpotifyStatus();
                 fetchNowPlaying();
                 startPolling();
                 renderTrackList();
                 updateTrackCount();
+            } else {
+                // Show login screen
+                document.getElementById('userSpotifyLogin').style.display = 'block';
             }
         }
 
         function backToStorageChoice() {
             document.getElementById('userSpotifyLogin').style.display = 'none';
             document.getElementById('storageChoice').classList.add('active');
-        }
-
-        function changeStorage() {
-            if (confirm('Weet je zeker dat je de opslagmethode wilt wijzigen? Je huidige lijst blijft bewaard.')) {
-                document.getElementById('mainApp').style.display = 'none';
-                document.getElementById('storageChoice').classList.add('active');
-                stopPolling();
-            }
         }
 
         // ============================================
@@ -1701,21 +1639,19 @@
             }
 
             // Show appropriate screen
-            if (storageMethod) {
-                if (storageMethod === 'spotify' && !spotifyAccessToken) {
+            if (storageMethod && storageMethod === 'spotify') {
+                if (!spotifyAccessToken) {
                     // Spotify selected but not logged in - show login screen
                     document.getElementById('userSpotifyLogin').style.display = 'block';
                 } else {
                     // Show main app
                     document.getElementById('mainApp').style.display = 'block';
 
-                    if (storageMethod === 'spotify') {
-                        await updateSpotifyStatus();
+                    await updateSpotifyStatus();
 
-                        // If we have a selected playlist, sync it
-                        if (selectedPlaylistId && spotifyAccessToken) {
-                            await syncPlaylistToTrackList();
-                        }
+                    // If we have a selected playlist, sync it
+                    if (selectedPlaylistId && spotifyAccessToken) {
+                        await syncPlaylistToTrackList();
                     }
 
                     fetchNowPlaying();
@@ -1724,12 +1660,17 @@
                     updateTrackCount();
                 }
             } else {
+                // No storage method or local storage - force user to choose Spotify
+                if (storageMethod === 'local') {
+                    // Clear old local storage method
+                    localStorage.removeItem('storageMethod');
+                    showAlert('Lokale opslag wordt niet meer ondersteund. Log in met Spotify om door te gaan.', 'info');
+                }
                 document.getElementById('storageChoice').classList.add('active');
             }
 
             // Event listeners
             document.getElementById('addToListBtn').addEventListener('click', addTrackToList);
-            document.getElementById('changeStorageBtn').addEventListener('click', changeStorage);
             document.getElementById('logoutBtn').addEventListener('click', logoutSpotify);
 
             // User login listeners
