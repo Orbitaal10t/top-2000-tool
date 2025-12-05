@@ -260,37 +260,25 @@
         }
 
         /* Spotify Connection Status */
-        .spotify-status {
+        .spotify-connection {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 12px;
-            background: #f5f5f5;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(29, 185, 84, 0.1);
             border-radius: 8px;
             margin-bottom: 16px;
-            font-size: 14px;
+            width: fit-content;
         }
 
-        .spotify-status.connected {
-            background: #f0fdf4;
-            color: #059669;
+        .spotify-logo {
+            font-size: 32px;
+            color: #1DB954;
         }
 
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #999;
-        }
-
-        .status-dot.connected {
-            background: #1DB954;
+        .check-icon {
+            font-size: 20px;
+            color: #1DB954;
         }
 
         /* Track List */
@@ -496,40 +484,6 @@
             cursor: not-allowed;
         }
 
-        /* Spotify Connection Status */
-        .spotify-status {
-            background: #191414;
-            color: #B3B3B3;
-            border: 1px solid #282828;
-        }
-
-        .spotify-status.connected {
-            background: rgba(29, 185, 84, 0.1);
-            color: #1DB954;
-            border: 1px solid #1DB954;
-        }
-
-        .spotify-status .status-dot {
-            background: #535353;
-        }
-
-        .spotify-status .status-dot.connected {
-            background: #1DB954;
-            box-shadow: 0 0 8px #1DB954;
-        }
-
-        /* Spotify Button Overrides */
-        .spotify-status .btn-danger {
-            background: transparent;
-            color: #FFFFFF;
-            border: 1px solid #535353;
-            border-radius: 500px;
-        }
-
-        .spotify-status .btn-danger:hover:not(:disabled) {
-            border-color: #FFFFFF;
-            transform: scale(1.04);
-        }
 
         /* Spotify Storage Option - volgens Spotify brand guidelines */
         .storage-option.recommended {
@@ -576,14 +530,9 @@
             <!-- Main App (hidden until storage is chosen) -->
             <div id="mainApp" style="display: none;">
                 <!-- Spotify Connection Status -->
-                <div id="spotifyStatus" style="display: none;" class="spotify-status">
-                    <div class="status-indicator">
-                        <span class="status-dot"></span>
-                        <span id="statusText">Niet verbonden</span>
-                    </div>
-                    <button id="logoutBtn" class="btn btn-danger btn-small" style="display: none;">
-                        Uitloggen
-                    </button>
+                <div id="spotifyStatus" style="display: none;" class="spotify-connection">
+                    <i class="fa-brands fa-spotify spotify-logo"></i>
+                    <i class="fa-solid fa-circle-check check-icon"></i>
                 </div>
 
 
@@ -634,6 +583,11 @@
             <h2>Mijn Stemlijst</h2>
             <div class="track-count" id="trackCount">0 nummers</div>
             <div id="savedTracksList"></div>
+
+            <!-- Logout Button -->
+            <button id="logoutBtn" class="btn btn-danger btn-block" style="display: none; margin-top: 20px;">
+                <i class="fa-solid fa-right-from-bracket"></i> Uitloggen van Spotify
+            </button>
         </div>
 <!-- Custom Client ID Setup (for users not authorized in admin app) -->
         <div id="customClientSetup" class="card" style="display: none;">
@@ -970,32 +924,25 @@
 
         async function updateSpotifyStatus() {
             const statusDiv = document.getElementById('spotifyStatus');
-            const statusText = document.getElementById('statusText');
-            const statusDot = statusDiv.querySelector('.status-dot');
             const logoutBtn = document.getElementById('logoutBtn');
             const playlistSelector = document.getElementById('playlistSelector');
 
             if (storageMethod === 'spotify') {
-                statusDiv.style.display = 'flex';
-
                 if (spotifyAccessToken) {
-                    statusDiv.classList.add('connected');
-                    statusDot.classList.add('connected');
-                    statusText.textContent = 'Verbonden met Spotify';
+                    statusDiv.style.display = 'flex';
                     logoutBtn.style.display = 'block';
 
                     // Show playlist selector
                     playlistSelector.style.display = 'block';
                     await loadAndDisplayPlaylists();
                 } else {
-                    statusDiv.classList.remove('connected');
-                    statusDot.classList.remove('connected');
-                    statusText.textContent = 'Niet verbonden - klik hieronder om in te loggen';
+                    statusDiv.style.display = 'none';
                     logoutBtn.style.display = 'none';
                     playlistSelector.style.display = 'none';
                 }
             } else {
                 statusDiv.style.display = 'none';
+                logoutBtn.style.display = 'none';
                 playlistSelector.style.display = 'none';
             }
         }
