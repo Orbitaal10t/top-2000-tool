@@ -594,6 +594,13 @@
             </div>
         </div>
 
+        <!-- Previous Tracks Section -->
+        <div id="previousTracksCard" class="card" style="display: none;">
+            <h2>Recent Gespeeld</h2>
+            <p class="subtitle">Voeg eerdere nummers toe aan je stemlijst</p>
+            <div id="previousTracksList"></div>
+        </div>
+
         <!-- Saved Tracks List -->
         <div id="savedTracksCard" class="card" style="display: none;">
             <h2>Mijn Stemlijst</h2>
@@ -647,6 +654,7 @@
         // STATE
         // ============================================
         let currentTrack = null;
+        let previousTracks = [];
         let storageMethod = null;
         let spotifyAccessToken = null;
         let spotifyRefreshToken = null;
@@ -918,19 +926,25 @@
                 // Parse the response - miniplayer API format
                 let artist, title;
 
-                // Get current playing track from radioTrackPlays
-                const currentPlay = data?.data?.radioTrackPlays?.data?.[0];
+                // Get all tracks from radioTrackPlays
+                const allTracks = data?.data?.radioTrackPlays?.data || [];
+
+                if (allTracks.length === 0) {
+                    throw new Error('No tracks found');
+                }
+
+                // Get current playing track (first one)
+                const currentPlay = allTracks[0];
 
                 if (currentPlay?.artist && currentPlay?.song) {
                     artist = currentPlay.artist;
                     title = currentPlay.song;
-                }
 
-                if (artist && title) {
                     currentTrack = {
                         artist: artist,
                         title: title,
-                        timestamp: new Date().toISOString()
+                        timestamp: new Date().toISOString(),
+                        coverUrl: currentPlay.radioTracks?.coverUrl || null
                     };
 
                     displayNowPlaying(currentTrack);
@@ -938,6 +952,18 @@
                 } else {
                     throw new Error('Invalid data format');
                 }
+
+                // Get previous tracks (skip first one which is current)
+                previousTracks = allTracks.slice(1).map(track => ({
+                    artist: track.artist,
+                    title: track.song,
+                    from: track.from,
+                    until: track.until,
+                    coverUrl: track.radioTracks?.coverUrl || null
+                }));
+
+                // Display previous tracks
+                displayPreviousTracks();
 
             } catch (error) {
                 console.error('Error fetching now playing:', error);
@@ -965,6 +991,39 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function displayPreviousTracks() {
+            const container = document.getElementById('previousTracksList');
+            const card = document.getElementById('previousTracksCard');
+
+            if (previousTracks.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+
+            card.style.display = 'block';
+
+            const html = previousTracks.map((track, index) => {
+                // Format time
+                const fromTime = new Date(track.from).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+                const untilTime = new Date(track.until).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+
+                return `
+                    <div class="track-item">
+                        <div class="track-details">
+                            <div class="track-artist">${escapeHtml(track.artist)}</div>
+                            <div class="track-title">${escapeHtml(track.title)}</div>
+                            <div style="font-size: 12px; color: #6A6A6A; margin-top: 4px;">${fromTime} - ${untilTime}</div>
+                        </div>
+                        <button class="btn btn-primary btn-small" onclick="addPreviousTrackToList(${index})">
+                            Voeg toe
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
         }
 
         // ============================================
@@ -1048,56 +1107,7 @@
             btnText.innerHTML = '<span class="spinner"></span> Bezig met toevoegen...';
 
             try {
-                // Check for duplicates in localStorage
-                const localTracks = getFromLocalStorage('top2000lijst') || [];
-                const isDuplicate = localTracks.some(t =>
-                    t.artist.toLowerCase() === currentTrack.artist.toLowerCase() &&
-                    t.title.toLowerCase() === currentTrack.title.toLowerCase()
-                );
-
-                if (isDuplicate) {
-                    showAlert('Dit nummer staat al in je lijst!', 'warning');
-                    return;
-                }
-
-                // Handle based on storage method
-                if (storageMethod === 'spotify') {
-                    if (!spotifyAccessToken) {
-                        showAlert('Je bent niet verbonden met Spotify. Log eerst in!', 'warning');
-                        await initiateSpotifyLogin();
-                        return;
-                    }
-
-                    // Search for track on Spotify
-                    const spotifyTrack = await searchSpotifyTrack(currentTrack.artist, currentTrack.title);
-
-                    if (!spotifyTrack) {
-                        showAlert('Nummer niet gevonden op Spotify. Toegevoegd aan lokale lijst.', 'warning');
-                        // Fallback to local storage
-                        currentTrack.spotifyUri = null;
-                        localTracks.push(currentTrack);
-                        saveToLocalStorage('top2000lijst', localTracks);
-                    } else {
-                        // Add to Spotify liked songs
-                        await addToSpotifyLikedSongs(spotifyTrack.uri);
-
-                        // Also save to local storage with Spotify URI
-                        currentTrack.spotifyUri = spotifyTrack.uri;
-                        localTracks.push(currentTrack);
-                        saveToLocalStorage('top2000lijst', localTracks);
-
-                        showAlert('✅ Nummer toegevoegd aan je Spotify liked songs!', 'success');
-                    }
-                } else {
-                    // Local storage only
-                    localTracks.push(currentTrack);
-                    saveToLocalStorage('top2000lijst', localTracks);
-                    showAlert('✅ Nummer toegevoegd aan je lokale lijst!', 'success');
-                }
-
-                renderTrackList();
-                updateTrackCount();
-
+                await addTrack(currentTrack);
             } catch (error) {
                 console.error('Error adding track:', error);
                 showAlert('⚠️ Fout bij toevoegen. Probeer opnieuw.', 'error');
@@ -1106,6 +1116,79 @@
                 addBtn.disabled = false;
                 btnText.textContent = originalText;
             }
+        }
+
+        async function addPreviousTrackToList(index) {
+            if (index < 0 || index >= previousTracks.length) {
+                return;
+            }
+
+            const track = previousTracks[index];
+            const trackObj = {
+                artist: track.artist,
+                title: track.title,
+                timestamp: track.from,
+                coverUrl: track.coverUrl
+            };
+
+            try {
+                await addTrack(trackObj);
+            } catch (error) {
+                console.error('Error adding previous track:', error);
+                showAlert('⚠️ Fout bij toevoegen. Probeer opnieuw.', 'error');
+            }
+        }
+
+        async function addTrack(track) {
+            // Check for duplicates in localStorage
+            const localTracks = getFromLocalStorage('top2000lijst') || [];
+            const isDuplicate = localTracks.some(t =>
+                t.artist.toLowerCase() === track.artist.toLowerCase() &&
+                t.title.toLowerCase() === track.title.toLowerCase()
+            );
+
+            if (isDuplicate) {
+                showAlert('Dit nummer staat al in je lijst!', 'warning');
+                return;
+            }
+
+            // Handle based on storage method
+            if (storageMethod === 'spotify') {
+                if (!spotifyAccessToken) {
+                    showAlert('Je bent niet verbonden met Spotify. Log eerst in!', 'warning');
+                    await initiateSpotifyLogin();
+                    return;
+                }
+
+                // Search for track on Spotify
+                const spotifyTrack = await searchSpotifyTrack(track.artist, track.title);
+
+                if (!spotifyTrack) {
+                    showAlert('Nummer niet gevonden op Spotify. Toegevoegd aan lokale lijst.', 'warning');
+                    // Fallback to local storage
+                    track.spotifyUri = null;
+                    localTracks.push(track);
+                    saveToLocalStorage('top2000lijst', localTracks);
+                } else {
+                    // Add to Spotify liked songs
+                    await addToSpotifyLikedSongs(spotifyTrack.uri);
+
+                    // Also save to local storage with Spotify URI
+                    track.spotifyUri = spotifyTrack.uri;
+                    localTracks.push(track);
+                    saveToLocalStorage('top2000lijst', localTracks);
+
+                    showAlert('✅ Nummer toegevoegd aan je Spotify liked songs!', 'success');
+                }
+            } else {
+                // Local storage only
+                localTracks.push(track);
+                saveToLocalStorage('top2000lijst', localTracks);
+                showAlert('✅ Nummer toegevoegd aan je lokale lijst!', 'success');
+            }
+
+            renderTrackList();
+            updateTrackCount();
         }
 
         function removeTrack(index) {
@@ -1263,8 +1346,9 @@
                 initiateSpotifyLogin();
             });
 
-            // Make removeTrack global
+            // Make functions global
             window.removeTrack = removeTrack;
+            window.addPreviousTrackToList = addPreviousTrackToList;
         }
 
         // Start the app
