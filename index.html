@@ -197,12 +197,13 @@
 
         .badge {
             background: #1DB954;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
+            color: #000000;
+            padding: 4px 12px;
+            border-radius: 500px;
             font-size: 11px;
             font-weight: bold;
             text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .pros-cons {
@@ -430,6 +431,146 @@
             color: #667eea;
             margin-bottom: 16px;
         }
+
+        /* Spotify-specific styling (volgens Spotify Design Guidelines) */
+
+        /* Spotify Configuration Card */
+        #spotifyConfig {
+            background: #191414;
+            color: #FFFFFF;
+        }
+
+        #spotifyConfig h2 {
+            color: #FFFFFF;
+        }
+
+        #spotifyConfig p,
+        #spotifyConfig ol {
+            color: #B3B3B3;
+        }
+
+        #spotifyConfig strong {
+            color: #FFFFFF;
+        }
+
+        #spotifyConfig a {
+            color: #1DB954;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        #spotifyConfig a:hover {
+            text-decoration: underline;
+        }
+
+        #spotifyConfig .config-section {
+            background: #282828;
+        }
+
+        #spotifyConfig .config-section label {
+            color: #FFFFFF;
+        }
+
+        #spotifyConfig .config-section input {
+            background: #121212;
+            border: 1px solid #535353;
+            color: #FFFFFF;
+        }
+
+        #spotifyConfig .config-section input:focus {
+            outline: none;
+            border-color: #1DB954;
+        }
+
+        #spotifyConfig .config-section input::placeholder {
+            color: #6A6A6A;
+        }
+
+        #spotifyConfig code {
+            background: #121212;
+            color: #1DB954;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Spotify Buttons - volgens Spotify guidelines */
+        .btn-spotify {
+            background: #1DB954;
+            color: #000000;
+            border: none;
+            border-radius: 500px;
+            padding: 16px 48px;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-spotify:hover:not(:disabled) {
+            background: #1ED760;
+            transform: scale(1.04);
+        }
+
+        .btn-spotify:active:not(:disabled) {
+            transform: scale(1);
+            background: #1AA34A;
+        }
+
+        .btn-spotify:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Spotify Connection Status */
+        .spotify-status {
+            background: #191414;
+            color: #B3B3B3;
+            border: 1px solid #282828;
+        }
+
+        .spotify-status.connected {
+            background: rgba(29, 185, 84, 0.1);
+            color: #1DB954;
+            border: 1px solid #1DB954;
+        }
+
+        .spotify-status .status-dot {
+            background: #535353;
+        }
+
+        .spotify-status .status-dot.connected {
+            background: #1DB954;
+            box-shadow: 0 0 8px #1DB954;
+        }
+
+        /* Spotify Logout Button */
+        #spotifyConfig .btn-danger,
+        .spotify-status .btn-danger {
+            background: transparent;
+            color: #FFFFFF;
+            border: 1px solid #535353;
+            border-radius: 500px;
+        }
+
+        #spotifyConfig .btn-danger:hover:not(:disabled),
+        .spotify-status .btn-danger:hover:not(:disabled) {
+            border-color: #FFFFFF;
+            transform: scale(1.04);
+        }
+
+        /* Spotify Storage Option - volgens Spotify brand guidelines */
+        .storage-option.recommended {
+            border-color: #1DB954;
+            background: rgba(29, 185, 84, 0.05);
+        }
+
+        .storage-option.recommended:hover {
+            background: rgba(29, 185, 84, 0.1);
+            border-color: #1DB954;
+        }
     </style>
 </head>
 <body>
@@ -520,14 +661,14 @@
         <!-- Spotify Configuration (only for Spotify users) -->
         <div id="spotifyConfig" class="card" style="display: none;">
             <h2>⚙️ Spotify Configuratie</h2>
-            <p style="margin-bottom: 16px; font-size: 14px; color: #666;">
+            <p style="margin-bottom: 16px; font-size: 14px;">
                 <strong>Let op:</strong> Je hebt een Spotify Developer App nodig. Volg deze stappen:
             </p>
-            <ol style="margin-left: 20px; margin-bottom: 16px; font-size: 14px; color: #666; line-height: 1.6;">
-                <li>Ga naar <a href="https://developer.spotify.com/dashboard" target="_blank" style="color: #1DB954;">Spotify Developer Dashboard</a></li>
+            <ol style="margin-left: 20px; margin-bottom: 16px; font-size: 14px; line-height: 1.6;">
+                <li>Ga naar <a href="https://developer.spotify.com/dashboard" target="_blank">Spotify Developer Dashboard</a></li>
                 <li>Maak een nieuwe app aan</li>
                 <li>Kopieer de <strong>Client ID</strong></li>
-                <li>Voeg deze <strong>Redirect URI</strong> toe: <code id="redirectUriDisplay" style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px;"></code></li>
+                <li>Voeg deze <strong>Redirect URI</strong> toe: <code id="redirectUriDisplay"></code></li>
                 <li>Vul hieronder je Client ID in</li>
             </ol>
             <div class="config-section">
@@ -538,8 +679,8 @@
                     placeholder="Plak hier je Spotify Client ID"
                     value=""
                 />
-                <button id="saveConfigBtn" class="btn btn-success btn-block" style="margin-top: 12px;">
-                    Opslaan en verbinden met Spotify
+                <button id="saveConfigBtn" class="btn-spotify btn-block" style="margin-top: 12px;">
+                    Verbind met Spotify
                 </button>
             </div>
         </div>
