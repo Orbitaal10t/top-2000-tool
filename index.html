@@ -705,6 +705,7 @@
         let isAddingTrack = false;
         let selectedPlaylistId = null;
         let userPlaylists = [];
+        let currentPlaylistTracks = []; // Tracks from selected playlist (in-memory only)
 
         // ============================================
         // UTILITY FUNCTIONS
@@ -728,9 +729,15 @@
         }
 
         function updateTrackCount() {
-            const tracks = getFromLocalStorage('top2000lijst') || [];
             const countEl = document.getElementById('trackCount');
-            const count = tracks.length;
+
+            // Only show count if playlist is selected
+            if (!selectedPlaylistId) {
+                countEl.textContent = 'Geen playlist geselecteerd';
+                return;
+            }
+
+            const count = currentPlaylistTracks.length;
             countEl.textContent = `${count} ${count === 1 ? 'nummer' : 'nummers'}`;
         }
 
@@ -980,12 +987,14 @@
                 spotifyRefreshToken = null;
                 spotifyTokenExpiry = null;
                 selectedPlaylistId = null;
+                currentPlaylistTracks = [];
 
                 localStorage.removeItem('spotifyAccessToken');
                 localStorage.removeItem('spotifyRefreshToken');
                 localStorage.removeItem('spotifyTokenExpiry');
                 localStorage.removeItem('selectedPlaylistId');
                 localStorage.removeItem('storageMethod');
+                localStorage.removeItem('top2000lijst'); // Clear old local tracks
 
                 // Go back to storage choice
                 storageMethod = null;
@@ -1449,26 +1458,30 @@
 
         async function syncPlaylistToTrackList() {
             if (!selectedPlaylistId) {
+                currentPlaylistTracks = [];
+                renderTrackList();
+                updateTrackCount();
                 return;
             }
 
             try {
                 const playlistTracks = await getPlaylistTracks(selectedPlaylistId);
 
-                // Convert to our format
-                const tracks = playlistTracks.map(item => ({
+                // Convert to our format and store in memory only
+                currentPlaylistTracks = playlistTracks.map(item => ({
                     artist: item.track.artists.map(a => a.name).join(', '),
                     title: item.track.name,
                     spotifyUri: item.track.uri,
                     timestamp: item.added_at
                 }));
 
-                // Save to localStorage for consistency
-                saveToLocalStorage('top2000lijst', tracks);
                 renderTrackList();
                 updateTrackCount();
             } catch (error) {
                 console.error('Error syncing playlist:', error);
+                currentPlaylistTracks = [];
+                renderTrackList();
+                updateTrackCount();
             }
         }
 
@@ -1584,7 +1597,6 @@
         }
 
         function renderTrackList() {
-            const tracks = getFromLocalStorage('top2000lijst') || [];
             const container = document.getElementById('savedTracksList');
             const card = document.getElementById('savedTracksCard');
 
@@ -1603,7 +1615,7 @@
             }
 
             // Playlist is selected
-            if (tracks.length === 0) {
+            if (currentPlaylistTracks.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon"><i class="fa-solid fa-music"></i></div>
@@ -1617,7 +1629,7 @@
 
             card.style.display = 'block';
 
-            const html = tracks.map((track, index) => `
+            const html = currentPlaylistTracks.map((track, index) => `
                 <div class="track-item">
                     <div class="track-details">
                         <div class="track-artist">${escapeHtml(track.artist)}</div>
@@ -1725,6 +1737,9 @@
         // INITIALIZATION
         // ============================================
         async function init() {
+            // Clear old local storage tracks
+            localStorage.removeItem('top2000lijst');
+
             // Load saved data
             storageMethod = getFromLocalStorage('storageMethod');
             spotifyAccessToken = getFromLocalStorage('spotifyAccessToken');
