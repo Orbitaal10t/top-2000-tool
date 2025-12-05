@@ -14,19 +14,20 @@ Een single-page HTML applicatie om nummers van NPO Radio 2 te tracken en op te s
 
 ## 🚀 Snelstart
 
-### Optie 1: Lokaal gebruik (simpel, maar beperkt)
+### Voor Gebruikers
 
-1. Open `index.html` in je browser
-2. Kies "Lokaal" als opslagmethode
-3. Klaar! Voeg nummers toe terwijl je luistert
+1. Open de app in je browser
+2. Klik op **"Inloggen met Spotify"**
+3. Log in bij Spotify en geef de app toegang
+4. Klaar! Voeg nummers toe terwijl je luistert
 
-**Let op**: Lokale opslag is alleen beschikbaar op dit apparaat en deze browser.
+**Let op**: De Spotify Client ID is globaal geconfigureerd via GitHub Secrets en werkt op alle apparaten!
 
-### Optie 2: Met Spotify (aanbevolen)
+### Voor Developers / Fork Owners
 
-Voor de beste ervaring met sync tussen apparaten en privacy:
+Als je je eigen versie van deze app host, moet je een Spotify Developer App aanmaken en de Client ID configureren:
 
-## 📋 Spotify Developer Setup (Eenmalig)
+## 📋 Spotify Developer Setup (Voor eigen deployment)
 
 ### Stap 1: Maak een Spotify Developer App
 
@@ -64,21 +65,25 @@ https://jouwdomein.nl/index.html
 - De applicatie toont de juiste redirect URI bovenaan de configuratie sectie
 - Je kunt meerdere redirect URIs toevoegen voor verschillende omgevingen
 
-### Stap 3: Kopieer je Client ID
+### Stap 3: Configureer GitHub Secret
 
 1. In je Spotify app dashboard, klik op **"Settings"**
 2. Kopieer de **Client ID** (lange string met letters en cijfers)
 3. **Let op**: Je hebt GEEN Client Secret nodig! (We gebruiken PKCE)
+4. Ga naar je GitHub repository → **Settings** → **Secrets and variables** → **Actions**
+5. Klik op **"New repository secret"**
+6. Vul in:
+   - **Name**: `SPOTIFY_CLIENT_ID`
+   - **Secret**: Plak hier je Spotify Client ID
+7. Klik op **"Add secret"**
 
-### Stap 4: Configureer de applicatie
+### Stap 4: Deploy de app
 
-1. Open `index.html` in je browser
-2. Kies **"Spotify (Aanbevolen)"** als opslagmethode
-3. Plak je **Client ID** in het invoerveld
-4. Klik op **"Opslaan en verbinden met Spotify"**
-5. Je wordt doorgestuurd naar Spotify om in te loggen
-6. Keur de app goed (eenmalig)
-7. Klaar! Je bent nu verbonden en blijft ingelogd
+1. Push naar `main` branch om de deployment te triggeren
+2. GitHub Actions injecteert automatisch je Client ID
+3. Klaar! De app is nu geconfigureerd en werkt op alle apparaten
+
+Voor meer details, zie [admin.html](admin.html) voor uitgebreide setup instructies.
 
 ## 🌐 De Applicatie Hosten
 
@@ -237,6 +242,7 @@ Ga naar je repository **Settings** > **Secrets and variables** > **Actions** en 
 
 | Secret | Beschrijving | Voorbeeld voor DirectAdmin |
 |--------|--------------|----------------------------|
+| `SPOTIFY_CLIENT_ID` | **Spotify Client ID** (zie setup hieronder) | `abc123def456...` |
 | `SSH_PRIVATE_KEY` | Je SSH private key | Inhoud van `~/.ssh/id_ed25519` |
 | `SSH_HOST` | Hostname van je server | `htools.nl` |
 | `SSH_USERNAME` | SSH gebruikersnaam | Je DirectAdmin gebruikersnaam |
@@ -300,10 +306,29 @@ De deployment start automatisch bij elke push naar `main`. Check de **Actions** 
 
 **De workflow:**
 1. ✅ Valideert alle secrets
-2. ✅ Test SSH verbinding
-3. ✅ Maakt deployment directory aan
-4. ✅ Synchroniseert bestanden via rsync
-5. ✅ Deployment compleet!
+2. ✅ Injecteert Spotify Client ID in index.html
+3. ✅ Test SSH verbinding
+4. ✅ Maakt deployment directory aan
+5. ✅ Synchroniseert bestanden via rsync
+6. ✅ Deployment compleet!
+
+### 🎵 Hoe werkt de Spotify Client ID Injectie?
+
+De Spotify Client ID wordt tijdens deployment automatisch in `index.html` geïnjecteerd:
+
+```yaml
+- name: Inject Spotify Client ID
+  run: |
+    sed -i "s/SPOTIFY_CLIENT_ID_PLACEHOLDER/${{ secrets.SPOTIFY_CLIENT_ID }}/g" index.html
+```
+
+Dit betekent:
+- ✅ De Client ID wordt **nooit** in de repository opgeslagen
+- ✅ De app werkt op **alle apparaten** zonder extra configuratie
+- ✅ Gebruikers hoeven **geen setup** te doen
+- ✅ Je kunt de Client ID gemakkelijk wijzigen via GitHub Secrets
+
+**Voor lokale development**: Gebruik de "Custom Client Setup" functie in de app om tijdelijk je eigen Client ID in te voeren.
 
 ## 📧 Support
 

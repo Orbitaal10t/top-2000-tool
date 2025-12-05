@@ -692,6 +692,9 @@
         const POLL_INTERVAL = 15000; // 15 seconds
         const SPOTIFY_SCOPES = 'playlist-modify-public playlist-modify-private playlist-read-private';
 
+        // Global Spotify Client ID - injected during deployment via GitHub Actions
+        const GLOBAL_SPOTIFY_CLIENT_ID = 'SPOTIFY_CLIENT_ID_PLACEHOLDER';
+
         // Get redirect URI dynamically
         const REDIRECT_URI = window.location.origin + window.location.pathname;
 
@@ -783,13 +786,18 @@
         // SPOTIFY AUTHENTICATION
         // ============================================
         function getActiveClientId() {
-            // First check if user has their own Client ID
+            // First check if global client ID is configured (from GitHub deployment)
+            if (GLOBAL_SPOTIFY_CLIENT_ID && GLOBAL_SPOTIFY_CLIENT_ID !== 'SPOTIFY_CLIENT_ID_PLACEHOLDER') {
+                return GLOBAL_SPOTIFY_CLIENT_ID;
+            }
+
+            // Fallback: check if user has their own Client ID (for custom setup)
             const userClientId = getFromLocalStorage('userSpotifyClientId');
             if (userClientId) {
                 return userClientId;
             }
 
-            // Otherwise use admin Client ID
+            // Legacy fallback: use admin Client ID from localStorage
             return getFromLocalStorage('spotifyClientId');
         }
 
@@ -1665,8 +1673,8 @@
                 return;
             }
 
-            // Check if Client ID is configured
-            const clientId = getFromLocalStorage('spotifyClientId');
+            // Check if Client ID is configured (global or user-provided)
+            const clientId = getActiveClientId();
 
             if (!clientId) {
                 showAlert('Spotify is nog niet geconfigureerd. Vraag de beheerder om de app in te stellen.', 'warning');
@@ -1757,17 +1765,6 @@
             spotifyRefreshToken = getFromLocalStorage('spotifyRefreshToken');
             spotifyTokenExpiry = getFromLocalStorage('spotifyTokenExpiry');
             selectedPlaylistId = getFromLocalStorage('selectedPlaylistId');
-
-            // Check for Client ID in URL parameters (shared link from admin)
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlClientId = urlParams.get('client_id');
-            if (urlClientId) {
-                // Save Client ID from URL
-                saveToLocalStorage('spotifyClientId', urlClientId);
-                // Clean URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-                showAlert('<i class="fa-solid fa-circle-check"></i> App geconfigureerd! Je kunt nu inloggen met Spotify.', 'success');
-            }
 
             // Check for OAuth callback
             if (window.location.search.includes('code=')) {
