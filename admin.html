@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Configuratie - Top 2000 Tracker</title>
+    <title>Setup Instructies - Top 2000 Tool</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         * {
@@ -17,14 +17,11 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .container {
-            max-width: 600px;
-            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         .card {
@@ -32,189 +29,35 @@
             color: #FFFFFF;
             border-radius: 16px;
             padding: 32px;
+            margin-bottom: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
         h1 {
             color: #1DB954;
-            margin-bottom: 8px;
-            font-size: 28px;
-            text-align: center;
+            margin-bottom: 16px;
+            font-size: 32px;
+        }
+
+        h2 {
+            color: #1DB954;
+            margin-bottom: 12px;
+            margin-top: 24px;
+            font-size: 22px;
+        }
+
+        h3 {
+            color: #FFFFFF;
+            margin-bottom: 12px;
+            margin-top: 16px;
+            font-size: 18px;
         }
 
         .subtitle {
             color: #B3B3B3;
-            margin-bottom: 32px;
-            font-size: 14px;
-            text-align: center;
-        }
-
-        .form-group {
             margin-bottom: 24px;
-        }
-
-        label {
-            display: block;
-            color: #FFFFFF;
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        input[type="password"],
-        input[type="text"] {
-            width: 100%;
-            padding: 12px 16px;
-            background: #121212;
-            border: 1px solid #535353;
-            border-radius: 8px;
-            color: #FFFFFF;
-            font-size: 14px;
-            transition: border-color 0.2s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #1DB954;
-        }
-
-        input::placeholder {
-            color: #6A6A6A;
-        }
-
-        .btn {
-            padding: 14px 28px;
-            border: none;
-            border-radius: 500px;
             font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            width: 100%;
-        }
-
-        .btn-primary {
-            background: #1DB954;
-            color: #000000;
-        }
-
-        .btn-primary:hover {
-            background: #1ED760;
-            transform: scale(1.04);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: #FFFFFF;
-            border: 1px solid #535353;
-            margin-top: 12px;
-        }
-
-        .btn-secondary:hover {
-            border-color: #FFFFFF;
-            transform: scale(1.04);
-        }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 14px;
-            display: none;
-        }
-
-        .alert.show {
-            display: block;
-        }
-
-        .alert-success {
-            background: rgba(29, 185, 84, 0.2);
-            color: #1DB954;
-            border: 1px solid #1DB954;
-        }
-
-        .alert-error {
-            background: rgba(220, 53, 69, 0.2);
-            color: #ef4444;
-            border: 1px solid #ef4444;
-        }
-
-        .alert-warning {
-            background: rgba(245, 158, 11, 0.2);
-            color: #f59e0b;
-            border: 1px solid #f59e0b;
-        }
-
-        .info-box {
-            background: #282828;
-            padding: 16px;
-            border-radius: 8px;
-            margin-top: 24px;
-            font-size: 13px;
             line-height: 1.6;
-            color: #B3B3B3;
-        }
-
-        .info-box strong {
-            color: #FFFFFF;
-        }
-
-        .info-box code {
-            background: #121212;
-            color: #1DB954;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-        }
-
-        .link-box {
-            background: #121212;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 12px;
-            word-break: break-all;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            color: #1DB954;
-            border: 1px solid #535353;
-        }
-
-        .copy-btn {
-            margin-top: 8px;
-            padding: 8px 16px;
-            font-size: 13px;
-        }
-
-        ol {
-            margin-left: 20px;
-            margin-top: 12px;
-            color: #B3B3B3;
-        }
-
-        ol li {
-            margin-bottom: 8px;
-        }
-
-        a {
-            color: #1DB954;
-            text-decoration: none;
-            font-weight: 700;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        #loginScreen,
-        #adminPanel {
-            display: none;
-        }
-
-        #loginScreen.active,
-        #adminPanel.active {
-            display: block;
         }
 
         .icon-large {
@@ -223,239 +66,234 @@
             text-align: center;
             margin-bottom: 16px;
         }
+
+        .info-box {
+            background: #282828;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 16px 0;
+            border-left: 4px solid #1DB954;
+        }
+
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid #f59e0b;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            color: #fbbf24;
+        }
+
+        code {
+            background: #121212;
+            color: #1DB954;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        pre {
+            background: #121212;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            display: block;
+        }
+
+        ol, ul {
+            margin-left: 24px;
+            margin-top: 12px;
+            color: #B3B3B3;
+            line-height: 1.8;
+        }
+
+        ol li, ul li {
+            margin-bottom: 12px;
+        }
+
+        a {
+            color: #1DB954;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #1DB954;
+            color: #000;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #1DB954;
+            color: #000;
+            border: none;
+            border-radius: 500px;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            margin-top: 16px;
+        }
+
+        .btn:hover {
+            background: #1ED760;
+            transform: scale(1.04);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 24px;
+            color: #B3B3B3;
+        }
+
+        .back-link:hover {
+            color: #FFFFFF;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="card">
-            <!-- Login Screen -->
-            <div id="loginScreen" class="active">
-                <div class="icon-large">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
-                <h1>Admin Login</h1>
-                <p class="subtitle">Voer het admin wachtwoord in</p>
+            <div class="icon-large">
+                <i class="fa-solid fa-rocket"></i>
+            </div>
+            <h1><i class="fa-solid fa-cog"></i> Top 2000 Tool - Setup Instructies</h1>
+            <p class="subtitle">
+                Leer hoe je de Spotify Client ID configureert voor je eigen deployment van deze app.
+            </p>
 
-                <div id="alert" class="alert"></div>
-
-                <form id="loginForm" onsubmit="login(event)">
-                    <div class="form-group">
-                        <label for="password">Wachtwoord</label>
-                        <input
-                            type="password"
-                            id="password"
-                            placeholder="Voer admin wachtwoord in"
-                            required
-                            autocomplete="current-password"
-                        >
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa-solid fa-right-to-bracket"></i> Inloggen
-                    </button>
-                </form>
-
-                <div class="info-box" style="margin-top: 24px;">
-                    <strong><i class="fa-solid fa-info-circle"></i> Eerste keer?</strong><br>
-                    Stel een wachtwoord in door de code aan te passen in <code>admin.html</code>.<br>
-                    Zoek naar <code>ADMIN_PASSWORD_HASH</code> en vervang de hash met jouw wachtwoord hash.<br>
-                    Gebruik een tool zoals <a href="https://emn178.github.io/online-tools/sha256.html" target="_blank">SHA-256 generator</a>.
-                </div>
+            <div class="warning-box">
+                <strong><i class="fa-solid fa-info-circle"></i> Let op!</strong><br>
+                Deze instructies zijn alleen nodig als je je eigen versie van deze app host.
+                Als je de app gebruikt via de standaard URL, is alles al geconfigureerd!
             </div>
 
-            <!-- Admin Panel -->
-            <div id="adminPanel">
-                <div class="icon-large">
-                    <i class="fa-solid fa-gear"></i>
-                </div>
-                <h1>Admin Configuratie</h1>
-                <p class="subtitle">Stel de Spotify app in voor al je gebruikers</p>
+            <h2><span class="step-number">1</span> Maak een Spotify Developer App</h2>
+            <div class="info-box">
+                <ol>
+                    <li>Ga naar de <a href="https://developer.spotify.com/dashboard" target="_blank">Spotify Developer Dashboard</a></li>
+                    <li>Log in met je Spotify account</li>
+                    <li>Klik op <strong>"Create app"</strong></li>
+                    <li>Vul de volgende gegevens in:
+                        <ul style="margin-top: 8px;">
+                            <li><strong>App name:</strong> Top 2000 Tool</li>
+                            <li><strong>App description:</strong> NPO Radio 2 Top 2000 tracker</li>
+                            <li><strong>Redirect URI:</strong> De URL waar je app draait + <code>/index.html</code><br>
+                                Bijvoorbeeld: <code>https://jouwdomein.nl/index.html</code></li>
+                            <li><strong>API:</strong> Selecteer "Web API"</li>
+                        </ul>
+                    </li>
+                    <li>Accepteer de voorwaarden en klik op <strong>"Save"</strong></li>
+                    <li>Kopieer je <strong>Client ID</strong> (je vindt deze op de app detail pagina)</li>
+                </ol>
+            </div>
 
-                <div id="adminAlert" class="alert"></div>
+            <h2><span class="step-number">2</span> Configureer GitHub Secret</h2>
+            <div class="info-box">
+                <ol>
+                    <li>Ga naar je GitHub repository</li>
+                    <li>Klik op <strong>"Settings"</strong> → <strong>"Secrets and variables"</strong> → <strong>"Actions"</strong></li>
+                    <li>Klik op <strong>"New repository secret"</strong></li>
+                    <li>Vul in:
+                        <ul style="margin-top: 8px;">
+                            <li><strong>Name:</strong> <code>SPOTIFY_CLIENT_ID</code></li>
+                            <li><strong>Secret:</strong> Plak hier je Spotify Client ID</li>
+                        </ul>
+                    </li>
+                    <li>Klik op <strong>"Add secret"</strong></li>
+                </ol>
+            </div>
 
-                <div class="info-box">
-                    <strong>Stappen om Spotify Developer App in te stellen:</strong>
-                    <ol>
-                        <li>Ga naar <a href="https://developer.spotify.com/dashboard" target="_blank">Spotify Developer Dashboard</a></li>
-                        <li>Maak een nieuwe app aan</li>
-                        <li>Kopieer de <strong>Client ID</strong></li>
-                        <li>Voeg deze <strong>Redirect URI</strong> toe: <code id="redirectUriDisplay"></code></li>
-                        <li>Vul hieronder je Client ID in</li>
-                    </ol>
-                </div>
+            <h2><span class="step-number">3</span> Deploy de App</h2>
+            <div class="info-box">
+                <p style="margin-bottom: 12px;">
+                    De Spotify Client ID wordt automatisch geïnjecteerd tijdens deployment via GitHub Actions.
+                </p>
+                <ol>
+                    <li>Push je wijzigingen naar de <code>main</code> branch</li>
+                    <li>GitHub Actions start automatisch de deployment</li>
+                    <li>De Client ID wordt vervangen in <code>index.html</code> voordat de bestanden worden gedeployed</li>
+                    <li>Je app is nu klaar voor gebruik!</li>
+                </ol>
+            </div>
 
-                <div class="form-group" style="margin-top: 24px;">
-                    <label for="clientId">
-                        <i class="fa-brands fa-spotify"></i> Spotify Client ID
-                    </label>
-                    <input
-                        type="text"
-                        id="clientId"
-                        placeholder="Plak hier je Spotify Client ID"
-                    >
-                </div>
+            <h2><i class="fa-solid fa-lightbulb"></i> Hoe werkt het?</h2>
+            <div class="info-box">
+                <p style="margin-bottom: 12px;">
+                    De deployment workflow in <code>.github/workflows/deploy.yml</code> voert de volgende stap uit:
+                </p>
+                <pre><code>- name: Inject Spotify Client ID
+  run: |
+    sed -i "s/SPOTIFY_CLIENT_ID_PLACEHOLDER/${{ secrets.SPOTIFY_CLIENT_ID }}/g" index.html</code></pre>
+                <p style="margin-top: 12px; color: #B3B3B3;">
+                    Dit vervangt de placeholder <code>SPOTIFY_CLIENT_ID_PLACEHOLDER</code> in de code met de echte Client ID uit je GitHub Secret.
+                    Zo blijft je Client ID veilig en werkt de app overal waar hij gehost wordt!
+                </p>
+            </div>
 
-                <button onclick="saveClientId()" class="btn btn-primary">
-                    <i class="fa-solid fa-floppy-disk"></i> Opslaan
-                </button>
+            <h2><i class="fa-solid fa-shield-halved"></i> Veiligheid</h2>
+            <div class="info-box">
+                <ul>
+                    <li><strong>Client ID is publiek:</strong> De Spotify Client ID is geen geheim - het is veilig om deze in je frontend code te hebben</li>
+                    <li><strong>PKCE Flow:</strong> Deze app gebruikt PKCE (Proof Key for Code Exchange) voor veilige authenticatie zonder Client Secret</li>
+                    <li><strong>Geen secrets in repository:</strong> De Client ID wordt nooit gecommit naar je repository</li>
+                    <li><strong>GitHub Secrets:</strong> Je Client ID wordt veilig opgeslagen in GitHub en alleen gebruikt tijdens deployment</li>
+                </ul>
+            </div>
 
-                <div id="shareSection" style="display: none; margin-top: 32px;">
-                    <hr style="border: none; border-top: 1px solid #535353; margin: 24px 0;">
+            <h2><i class="fa-solid fa-question-circle"></i> Veelgestelde Vragen</h2>
+            <div class="info-box">
+                <h3>Waarom zie ik de melding "Spotify is nog niet geconfigureerd"?</h3>
+                <p style="color: #B3B3B3; margin-bottom: 12px;">
+                    Dit betekent dat de <code>SPOTIFY_CLIENT_ID</code> GitHub Secret nog niet is ingesteld of dat de app nog niet is gedeployed na het instellen van de secret.
+                </p>
 
-                    <h3 style="color: #FFFFFF; margin-bottom: 12px; font-size: 18px;">
-                        <i class="fa-solid fa-share-nodes"></i> Deel met Gebruikers
-                    </h3>
-                    <p style="color: #B3B3B3; font-size: 14px; margin-bottom: 12px;">
-                        Deel deze link met je vrienden. De app wordt automatisch geconfigureerd:
-                    </p>
-                    <div class="link-box" id="shareLink"></div>
-                    <button onclick="copyShareLink()" class="btn btn-secondary copy-btn">
-                        <i class="fa-solid fa-copy"></i> Kopieer Link
-                    </button>
-                </div>
+                <h3>Kan ik de app lokaal testen?</h3>
+                <p style="color: #B3B3B3; margin-bottom: 12px;">
+                    Ja! Open <code>index.html</code> in een browser en gebruik de "Custom Client Setup" functie om tijdelijk je eigen Client ID in te voeren voor local testing.
+                </p>
 
-                <button onclick="logout()" class="btn btn-secondary">
-                    <i class="fa-solid fa-right-from-bracket"></i> Uitloggen
-                </button>
+                <h3>Moet ik mijn Spotify app in Production Mode zetten?</h3>
+                <p style="color: #B3B3B3;">
+                    Nee, Development Mode is voldoende voor persoonlijk gebruik. Production Mode is alleen nodig als je meer dan 25 gebruikers hebt.
+                </p>
+            </div>
+
+            <div style="text-align: center; margin-top: 32px;">
+                <a href="index.html" class="btn">
+                    <i class="fa-solid fa-arrow-left"></i> Terug naar App
+                </a>
             </div>
         </div>
+
+        <div style="text-align: center; margin-top: 16px;">
+            <a href="https://github.com" class="back-link" target="_blank">
+                <i class="fa-brands fa-github"></i> View on GitHub
+            </a>
+        </div>
     </div>
-
-    <script>
-        // ============================================
-        // CONFIGURATION
-        // ============================================
-        // SHA-256 hash van het admin wachtwoord
-        // Standaard wachtwoord: "admin123" (WIJZIG DIT!)
-        // Genereer een nieuwe hash op: https://emn178.github.io/online-tools/sha256.html
-        const ADMIN_PASSWORD_HASH = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
-
-        const REDIRECT_URI = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
-
-        // ============================================
-        // STATE
-        // ============================================
-        let isLoggedIn = false;
-
-        // ============================================
-        // UTILITY FUNCTIONS
-        // ============================================
-        function showAlert(elementId, message, type = 'info') {
-            const alert = document.getElementById(elementId);
-            alert.className = `alert alert-${type} show`;
-            alert.innerHTML = message;
-            setTimeout(() => {
-                alert.classList.remove('show');
-            }, 5000);
-        }
-
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        // ============================================
-        // AUTHENTICATION
-        // ============================================
-        async function login(event) {
-            event.preventDefault();
-
-            const password = document.getElementById('password').value;
-            const hash = await sha256(password);
-
-            if (hash === ADMIN_PASSWORD_HASH) {
-                isLoggedIn = true;
-                sessionStorage.setItem('adminLoggedIn', 'true');
-                showAdminPanel();
-            } else {
-                showAlert('alert', '<i class="fa-solid fa-triangle-exclamation"></i> Incorrect wachtwoord', 'error');
-                document.getElementById('password').value = '';
-            }
-        }
-
-        function logout() {
-            isLoggedIn = false;
-            sessionStorage.removeItem('adminLoggedIn');
-            document.getElementById('adminPanel').classList.remove('active');
-            document.getElementById('loginScreen').classList.add('active');
-            document.getElementById('password').value = '';
-        }
-
-        function showAdminPanel() {
-            document.getElementById('loginScreen').classList.remove('active');
-            document.getElementById('adminPanel').classList.add('active');
-
-            // Load existing Client ID if available
-            const savedClientId = localStorage.getItem('spotifyClientId');
-            if (savedClientId) {
-                const clientId = JSON.parse(savedClientId);
-                document.getElementById('clientId').value = clientId;
-                generateShareLink(clientId);
-            }
-
-            // Display redirect URI
-            document.getElementById('redirectUriDisplay').textContent = REDIRECT_URI;
-        }
-
-        // ============================================
-        // CLIENT ID MANAGEMENT
-        // ============================================
-        function saveClientId() {
-            const clientId = document.getElementById('clientId').value.trim();
-
-            if (!clientId) {
-                showAlert('adminAlert', '<i class="fa-solid fa-triangle-exclamation"></i> Vul een Client ID in', 'warning');
-                return;
-            }
-
-            // Save to localStorage
-            localStorage.setItem('spotifyClientId', JSON.stringify(clientId));
-
-            showAlert('adminAlert', '<i class="fa-solid fa-circle-check"></i> Client ID opgeslagen!', 'success');
-
-            // Generate share link
-            generateShareLink(clientId);
-        }
-
-        function generateShareLink(clientId) {
-            const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
-            const shareUrl = `${baseUrl}?client_id=${encodeURIComponent(clientId)}`;
-
-            document.getElementById('shareLink').textContent = shareUrl;
-            document.getElementById('shareSection').style.display = 'block';
-        }
-
-        function copyShareLink() {
-            const link = document.getElementById('shareLink').textContent;
-
-            navigator.clipboard.writeText(link).then(() => {
-                showAlert('adminAlert', '<i class="fa-solid fa-check"></i> Link gekopieerd naar klembord!', 'success');
-            }).catch(err => {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = link;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                showAlert('adminAlert', '<i class="fa-solid fa-check"></i> Link gekopieerd!', 'success');
-            });
-        }
-
-        // ============================================
-        // INITIALIZATION
-        // ============================================
-        function init() {
-            // Check if already logged in this session
-            const loggedIn = sessionStorage.getItem('adminLoggedIn');
-            if (loggedIn === 'true') {
-                isLoggedIn = true;
-                showAdminPanel();
-            }
-        }
-
-        init();
-    </script>
 </body>
 </html>
