@@ -662,6 +662,18 @@
                     </button>
                 </div>
 
+                <!-- Playlist Selection (only for Spotify users) -->
+                <div id="playlistSelector" style="display: none; margin-bottom: 16px; background: #f9f9f9; padding: 16px; border-radius: 8px;">
+                    <h3 style="font-size: 16px; margin-bottom: 12px; color: #333;">
+                        <i class="fa-solid fa-list-music"></i> Kies je Top 2000 Playlist
+                    </h3>
+                    <div id="playlistSelectorContent">
+                        <div style="text-align: center; color: #999; padding: 20px;">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> Playlists laden...
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Live Listen Button -->
                 <div style="text-align: right; margin-bottom: 16px;">
                     <a href="https://www.nporadio2.nl/online-radio-luisteren/gedraaid" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-small" style="text-decoration: none; font-size: 13px;">
@@ -738,7 +750,7 @@
         const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
         const SPOTIFY_API_URL = 'https://api.spotify.com/v1';
         const POLL_INTERVAL = 15000; // 15 seconds
-        const SPOTIFY_SCOPES = 'playlist-modify-public playlist-modify-private playlist-read-private user-library-read user-library-modify';
+        const SPOTIFY_SCOPES = 'playlist-modify-public playlist-modify-private playlist-read-private';
 
         // Get redirect URI dynamically
         const REDIRECT_URI = window.location.origin + window.location.pathname;
@@ -754,6 +766,8 @@
         let spotifyTokenExpiry = null;
         let pollTimer = null;
         let isAddingTrack = false;
+        let selectedPlaylistId = null;
+        let userPlaylists = [];
 
         // ============================================
         // UTILITY FUNCTIONS
@@ -894,7 +908,7 @@
                     window.history.replaceState({}, document.title, window.location.pathname);
 
                     showAlert('<i class="fa-solid fa-circle-check"></i> Succesvol verbonden met Spotify!', 'success');
-                    updateSpotifyStatus();
+                    await updateSpotifyStatus();
 
                 } catch (error) {
                     console.error('Token exchange error:', error);
@@ -963,11 +977,12 @@
             return true;
         }
 
-        function updateSpotifyStatus() {
+        async function updateSpotifyStatus() {
             const statusDiv = document.getElementById('spotifyStatus');
             const statusText = document.getElementById('statusText');
             const statusDot = statusDiv.querySelector('.status-dot');
             const logoutBtn = document.getElementById('logoutBtn');
+            const playlistSelector = document.getElementById('playlistSelector');
 
             if (storageMethod === 'spotify') {
                 statusDiv.style.display = 'flex';
@@ -977,14 +992,20 @@
                     statusDot.classList.add('connected');
                     statusText.textContent = 'Verbonden met Spotify';
                     logoutBtn.style.display = 'block';
+
+                    // Show playlist selector
+                    playlistSelector.style.display = 'block';
+                    await loadAndDisplayPlaylists();
                 } else {
                     statusDiv.classList.remove('connected');
                     statusDot.classList.remove('connected');
                     statusText.textContent = 'Niet verbonden - klik hieronder om in te loggen';
                     logoutBtn.style.display = 'none';
+                    playlistSelector.style.display = 'none';
                 }
             } else {
                 statusDiv.style.display = 'none';
+                playlistSelector.style.display = 'none';
             }
         }
 
@@ -1164,32 +1185,121 @@
             return null;
         }
 
-        async function addToSpotifyLikedSongs(trackUri) {
+        async function getUserPlaylists() {
             const isValid = await ensureValidToken();
 
             if (!isValid) {
                 throw new Error('No valid Spotify token');
             }
 
-            // Extract track ID from URI
-            const trackId = trackUri.replace('spotify:track:', '');
+            const response = await fetch(`${SPOTIFY_API_URL}/me/playlists?limit=50`, {
+                headers: {
+                    'Authorization': `Bearer ${spotifyAccessToken}`
+                }
+            });
 
-            const response = await fetch(`${SPOTIFY_API_URL}/me/tracks`, {
-                method: 'PUT',
+            if (!response.ok) {
+                throw new Error('Failed to fetch playlists');
+            }
+
+            const data = await response.json();
+            return data.items || [];
+        }
+
+        async function createPlaylist(name) {
+            const isValid = await ensureValidToken();
+
+            if (!isValid) {
+                throw new Error('No valid Spotify token');
+            }
+
+            // First get user ID
+            const userResponse = await fetch(`${SPOTIFY_API_URL}/me`, {
+                headers: {
+                    'Authorization': `Bearer ${spotifyAccessToken}`
+                }
+            });
+
+            if (!userResponse.ok) {
+                throw new Error('Failed to get user info');
+            }
+
+            const userData = await userResponse.json();
+            const userId = userData.id;
+
+            // Create playlist
+            const response = await fetch(`${SPOTIFY_API_URL}/users/${userId}/playlists`, {
+                method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${spotifyAccessToken}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    ids: [trackId]
+                    name: name,
+                    description: 'Mijn Top 2000 stemlijst - gemaakt via NPO Radio 2 tracker',
+                    public: false
                 })
             });
 
             if (!response.ok) {
-                throw new Error('Failed to add to liked songs');
+                throw new Error('Failed to create playlist');
+            }
+
+            return await response.json();
+        }
+
+        async function addToSpotifyPlaylist(playlistId, trackUri) {
+            const isValid = await ensureValidToken();
+
+            if (!isValid) {
+                throw new Error('No valid Spotify token');
+            }
+
+            const response = await fetch(`${SPOTIFY_API_URL}/playlists/${playlistId}/tracks`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${spotifyAccessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    uris: [trackUri]
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to add to playlist');
             }
 
             return true;
+        }
+
+        async function getPlaylistTracks(playlistId) {
+            const isValid = await ensureValidToken();
+
+            if (!isValid) {
+                throw new Error('No valid Spotify token');
+            }
+
+            let allTracks = [];
+            let url = `${SPOTIFY_API_URL}/playlists/${playlistId}/tracks?limit=100`;
+
+            while (url) {
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${spotifyAccessToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch playlist tracks');
+                }
+
+                const data = await response.json();
+                allTracks = allTracks.concat(data.items);
+                url = data.next;
+            }
+
+            return allTracks;
         }
 
         // ============================================
@@ -1242,18 +1352,6 @@
         }
 
         async function addTrack(track) {
-            // Check for duplicates in localStorage
-            const localTracks = getFromLocalStorage('top2000lijst') || [];
-            const isDuplicate = localTracks.some(t =>
-                t.artist.toLowerCase() === track.artist.toLowerCase() &&
-                t.title.toLowerCase() === track.title.toLowerCase()
-            );
-
-            if (isDuplicate) {
-                showAlert('Dit nummer staat al in je lijst!', 'warning');
-                return;
-            }
-
             // Handle based on storage method
             if (storageMethod === 'spotify') {
                 if (!spotifyAccessToken) {
@@ -1262,45 +1360,224 @@
                     return;
                 }
 
+                if (!selectedPlaylistId) {
+                    showAlert('Kies eerst een playlist!', 'warning');
+                    return;
+                }
+
                 // Search for track on Spotify
                 const spotifyTrack = await searchSpotifyTrack(track.artist, track.title);
 
                 if (!spotifyTrack) {
-                    showAlert('Nummer niet gevonden op Spotify. Toegevoegd aan lokale lijst.', 'warning');
-                    // Fallback to local storage
-                    track.spotifyUri = null;
-                    localTracks.push(track);
-                    saveToLocalStorage('top2000lijst', localTracks);
-                } else {
-                    // Add to Spotify liked songs
-                    await addToSpotifyLikedSongs(spotifyTrack.uri);
-
-                    // Also save to local storage with Spotify URI
-                    track.spotifyUri = spotifyTrack.uri;
-                    localTracks.push(track);
-                    saveToLocalStorage('top2000lijst', localTracks);
-
-                    showAlert('<i class="fa-solid fa-circle-check"></i> Nummer toegevoegd aan je Spotify liked songs!', 'success');
+                    showAlert('Nummer niet gevonden op Spotify.', 'error');
+                    return;
                 }
+
+                // Add to Spotify playlist
+                await addToSpotifyPlaylist(selectedPlaylistId, spotifyTrack.uri);
+                showAlert('<i class="fa-solid fa-circle-check"></i> Nummer toegevoegd aan je Spotify playlist!', 'success');
+
+                // Refresh the track list from Spotify
+                await syncPlaylistToTrackList();
             } else {
                 // Local storage only
+                const localTracks = getFromLocalStorage('top2000lijst') || [];
+
+                // Check for duplicates
+                const isDuplicate = localTracks.some(t =>
+                    t.artist.toLowerCase() === track.artist.toLowerCase() &&
+                    t.title.toLowerCase() === track.title.toLowerCase()
+                );
+
+                if (isDuplicate) {
+                    showAlert('Dit nummer staat al in je lijst!', 'warning');
+                    return;
+                }
+
                 localTracks.push(track);
                 saveToLocalStorage('top2000lijst', localTracks);
                 showAlert('<i class="fa-solid fa-circle-check"></i> Nummer toegevoegd aan je lokale lijst!', 'success');
-            }
 
-            renderTrackList();
-            updateTrackCount();
+                renderTrackList();
+                updateTrackCount();
+            }
         }
 
-        function removeTrack(index) {
-            if (confirm('Weet je zeker dat je dit nummer wilt verwijderen?')) {
+        async function removeTrack(index) {
+            if (!confirm('Weet je zeker dat je dit nummer wilt verwijderen?')) {
+                return;
+            }
+
+            if (storageMethod === 'spotify' && selectedPlaylistId) {
+                // Get playlist tracks to find the track to remove
+                const playlistTracks = await getPlaylistTracks(selectedPlaylistId);
+
+                if (index >= 0 && index < playlistTracks.length) {
+                    const trackToRemove = playlistTracks[index];
+                    const trackUri = trackToRemove.track.uri;
+
+                    // Remove from Spotify playlist
+                    const isValid = await ensureValidToken();
+                    if (isValid) {
+                        await fetch(`${SPOTIFY_API_URL}/playlists/${selectedPlaylistId}/tracks`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${spotifyAccessToken}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                tracks: [{ uri: trackUri }]
+                            })
+                        });
+
+                        showAlert('Nummer verwijderd uit playlist', 'info');
+                        await syncPlaylistToTrackList();
+                    }
+                }
+            } else {
+                // Local storage
                 const tracks = getFromLocalStorage('top2000lijst') || [];
                 tracks.splice(index, 1);
                 saveToLocalStorage('top2000lijst', tracks);
                 renderTrackList();
                 updateTrackCount();
                 showAlert('Nummer verwijderd', 'info');
+            }
+        }
+
+        async function syncPlaylistToTrackList() {
+            if (!selectedPlaylistId) {
+                return;
+            }
+
+            try {
+                const playlistTracks = await getPlaylistTracks(selectedPlaylistId);
+
+                // Convert to our format
+                const tracks = playlistTracks.map(item => ({
+                    artist: item.track.artists.map(a => a.name).join(', '),
+                    title: item.track.name,
+                    spotifyUri: item.track.uri,
+                    timestamp: item.added_at
+                }));
+
+                // Save to localStorage for consistency
+                saveToLocalStorage('top2000lijst', tracks);
+                renderTrackList();
+                updateTrackCount();
+            } catch (error) {
+                console.error('Error syncing playlist:', error);
+            }
+        }
+
+        async function loadAndDisplayPlaylists() {
+            const container = document.getElementById('playlistSelectorContent');
+
+            try {
+                userPlaylists = await getUserPlaylists();
+
+                if (userPlaylists.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 20px;">
+                            <p style="color: #666; margin-bottom: 12px;">Je hebt nog geen playlists.</p>
+                            <button class="btn-spotify" onclick="createNewPlaylist()" style="padding: 12px 24px; font-size: 14px;">
+                                <i class="fa-solid fa-plus"></i> Maak nieuwe playlist
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Create dropdown and new playlist button
+                let html = `
+                    <select id="playlistDropdown" class="form-select" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 12px;">
+                        <option value="">-- Kies een playlist --</option>
+                `;
+
+                userPlaylists.forEach(playlist => {
+                    const selected = playlist.id === selectedPlaylistId ? 'selected' : '';
+                    html += `<option value="${playlist.id}" ${selected}>${escapeHtml(playlist.name)} (${playlist.tracks.total} nummers)</option>`;
+                });
+
+                html += `
+                    </select>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary" onclick="selectPlaylist()" style="flex: 1;">
+                            <i class="fa-solid fa-check"></i> Selecteer Playlist
+                        </button>
+                        <button class="btn btn-secondary" onclick="createNewPlaylist()">
+                            <i class="fa-solid fa-plus"></i> Nieuwe
+                        </button>
+                    </div>
+                `;
+
+                if (selectedPlaylistId) {
+                    const selectedPlaylist = userPlaylists.find(p => p.id === selectedPlaylistId);
+                    if (selectedPlaylist) {
+                        html += `
+                            <div style="margin-top: 12px; padding: 12px; background: #e8f5e9; border-radius: 4px; font-size: 14px; color: #2e7d32;">
+                                <i class="fa-solid fa-circle-check"></i> Geselecteerd: <strong>${escapeHtml(selectedPlaylist.name)}</strong>
+                            </div>
+                        `;
+                    }
+                }
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading playlists:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; color: #dc2626; padding: 20px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Fout bij laden playlists
+                    </div>
+                `;
+            }
+        }
+
+        async function selectPlaylist() {
+            const dropdown = document.getElementById('playlistDropdown');
+            const playlistId = dropdown.value;
+
+            if (!playlistId) {
+                showAlert('Kies een playlist uit de lijst', 'warning');
+                return;
+            }
+
+            selectedPlaylistId = playlistId;
+            saveToLocalStorage('selectedPlaylistId', playlistId);
+
+            showAlert('<i class="fa-solid fa-circle-check"></i> Playlist geselecteerd!', 'success');
+
+            // Sync playlist to track list
+            await syncPlaylistToTrackList();
+
+            // Refresh display
+            await loadAndDisplayPlaylists();
+        }
+
+        async function createNewPlaylist() {
+            const name = prompt('Geef je nieuwe playlist een naam:', 'Mijn Top 2000 Stemlijst');
+
+            if (!name || name.trim() === '') {
+                return;
+            }
+
+            try {
+                const newPlaylist = await createPlaylist(name.trim());
+                selectedPlaylistId = newPlaylist.id;
+                saveToLocalStorage('selectedPlaylistId', selectedPlaylistId);
+
+                showAlert('<i class="fa-solid fa-circle-check"></i> Playlist aangemaakt en geselecteerd!', 'success');
+
+                // Refresh playlist list
+                await loadAndDisplayPlaylists();
+
+                // Sync (will be empty but sets up structure)
+                await syncPlaylistToTrackList();
+
+            } catch (error) {
+                console.error('Error creating playlist:', error);
+                showAlert('Fout bij aanmaken playlist. Probeer opnieuw.', 'error');
             }
         }
 
@@ -1341,7 +1618,7 @@
         // ============================================
         // STORAGE CHOICE
         // ============================================
-        function chooseStorage(method) {
+        async function chooseStorage(method) {
             storageMethod = method;
             saveToLocalStorage('storageMethod', method);
 
@@ -1350,7 +1627,7 @@
 
             if (method === 'spotify') {
                 document.getElementById('spotifyConfig').style.display = 'block';
-                updateSpotifyStatus();
+                await updateSpotifyStatus();
             } else {
                 document.getElementById('spotifyConfig').style.display = 'none';
                 showAlert('Lokale opslag actief. Let op: lijst is alleen zichtbaar op dit apparaat.', 'info');
@@ -1391,7 +1668,7 @@
         // ============================================
         // INITIALIZATION
         // ============================================
-        function init() {
+        async function init() {
             // Display redirect URI for user
             document.getElementById('redirectUriDisplay').textContent = REDIRECT_URI;
 
@@ -1400,6 +1677,7 @@
             spotifyAccessToken = getFromLocalStorage('spotifyAccessToken');
             spotifyRefreshToken = getFromLocalStorage('spotifyRefreshToken');
             spotifyTokenExpiry = getFromLocalStorage('spotifyTokenExpiry');
+            selectedPlaylistId = getFromLocalStorage('selectedPlaylistId');
 
             // Load saved Spotify Client ID
             const savedClientId = getFromLocalStorage('spotifyClientId');
@@ -1409,7 +1687,7 @@
 
             // Check for OAuth callback
             if (window.location.search.includes('code=')) {
-                handleSpotifyCallback();
+                await handleSpotifyCallback();
             }
 
             // Show appropriate screen
@@ -1418,7 +1696,12 @@
 
                 if (storageMethod === 'spotify') {
                     document.getElementById('spotifyConfig').style.display = 'block';
-                    updateSpotifyStatus();
+                    await updateSpotifyStatus();
+
+                    // If we have a selected playlist, sync it
+                    if (selectedPlaylistId && spotifyAccessToken) {
+                        await syncPlaylistToTrackList();
+                    }
                 }
 
                 fetchNowPlaying();
@@ -1451,6 +1734,9 @@
             // Make functions global
             window.removeTrack = removeTrack;
             window.addPreviousTrackToList = addPreviousTrackToList;
+            window.selectPlaylist = selectPlaylist;
+            window.createNewPlaylist = createNewPlaylist;
+            window.chooseStorage = chooseStorage;
         }
 
         // Start the app
