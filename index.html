@@ -720,6 +720,14 @@
             setTimeout(() => {
                 alert.classList.remove('show');
             }, 5000);
+
+            // Auto-scroll naar playlist selectie bij deze specifieke waarschuwing
+            if (message === 'Kies eerst een playlist!') {
+                const playlistSelector = document.getElementById('playlistSelector');
+                if (playlistSelector) {
+                    playlistSelector.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
         }
 
         function saveToLocalStorage(key, value) {
