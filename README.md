@@ -9,6 +9,7 @@ Single-page app om NPO Radio 2 tracks toe te voegen aan een Spotify playlist.
 - Automatische token refresh
 - PWA support
 
+Check het live via https://htools.nl/top-2000-tool/
 ## Setup
 
 ### Spotify Developer App
