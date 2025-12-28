@@ -236,31 +236,40 @@
                 </ol>
             </div>
 
-            <h2><span class="step-number">2</span> Configureer GitHub Secret</h2>
+            <h2><span class="step-number">2</span> Configureer de App</h2>
             <div class="info-box">
+                <p style="margin-bottom: 12px; color: #B3B3B3;">
+                    Er zijn twee manieren om je Spotify Client ID te configureren:
+                </p>
+
+                <h3 style="color: #1DB954;">✅ Methode A: config.js bestand (Aanbevolen)</h3>
                 <ol>
-                    <li>Ga naar je GitHub repository</li>
-                    <li>Klik op <strong>"Settings"</strong> → <strong>"Secrets and variables"</strong> → <strong>"Actions"</strong></li>
-                    <li>Klik op <strong>"New repository secret"</strong></li>
-                    <li>Vul in:
-                        <ul style="margin-top: 8px;">
-                            <li><strong>Name:</strong> <code>SPOTIFY_CLIENT_ID</code></li>
-                            <li><strong>Secret:</strong> Plak hier je Spotify Client ID</li>
-                        </ul>
-                    </li>
-                    <li>Klik op <strong>"Add secret"</strong></li>
+                    <li>Kopieer <code>config.example.js</code> naar <code>config.js</code></li>
+                    <li>Open <code>config.js</code> in een teksteditor</li>
+                    <li>Vervang <code>'jouw-client-id-hier'</code> met je echte Spotify Client ID</li>
+                    <li>Sla het bestand op en commit naar je repository</li>
                 </ol>
+                <p style="margin-top: 12px; color: #fbbf24;">
+                    <strong>💡 Veilig:</strong> De Spotify Client ID is expliciet ontworpen om publiek te zijn!
+                    De beveiliging zit in PKCE (Proof Key for Code Exchange), niet in geheimhouding van de Client ID.
+                </p>
+
+                <h3 style="color: #1DB954; margin-top: 20px;">🔧 Methode B: Custom Client Setup</h3>
+                <p style="color: #B3B3B3;">
+                    Als je de Client ID niet wilt committen, kunnen gebruikers hun eigen Client ID invoeren via de setup wizard in de app.
+                    Dit is handig als je Spotify app in Development Mode staat.
+                </p>
             </div>
 
             <h2><span class="step-number">3</span> Deploy de App</h2>
             <div class="info-box">
                 <p style="margin-bottom: 12px;">
-                    De Spotify Client ID wordt automatisch geïnjecteerd tijdens deployment via GitHub Actions.
+                    Deployment gebeurt automatisch via GitHub Actions.
                 </p>
                 <ol>
                     <li>Push je wijzigingen naar de <code>main</code> branch</li>
                     <li>GitHub Actions start automatisch de deployment</li>
-                    <li>De Client ID wordt vervangen in <code>index.html</code> voordat de bestanden worden gedeployed</li>
+                    <li>Bestanden worden via SSH/rsync naar je server gesynchroniseerd</li>
                     <li>Je app is nu klaar voor gebruik!</li>
                 </ol>
             </div>
@@ -268,14 +277,16 @@
             <h2><i class="fa-solid fa-lightbulb"></i> Hoe werkt het?</h2>
             <div class="info-box">
                 <p style="margin-bottom: 12px;">
-                    De deployment workflow in <code>.github/workflows/deploy.yml</code> voert de volgende stap uit:
+                    De app laadt de configuratie uit <code>config.js</code>:
                 </p>
-                <pre><code>- name: Inject Spotify Client ID
-  run: |
-    sed -i "s/SPOTIFY_CLIENT_ID_PLACEHOLDER/${{ secrets.SPOTIFY_CLIENT_ID }}/g" index.html</code></pre>
+                <pre><code>const CONFIG = {
+    SPOTIFY_CLIENT_ID: 'jouw-client-id-hier',
+    NPO_API_URL: 'https://www.nporadio2.nl/api/...',
+    // ... andere instellingen
+};</code></pre>
                 <p style="margin-top: 12px; color: #B3B3B3;">
-                    Dit vervangt de placeholder <code>SPOTIFY_CLIENT_ID_PLACEHOLDER</code> in de code met de echte Client ID uit je GitHub Secret.
-                    Zo blijft je Client ID veilig en werkt de app overal waar hij gehost wordt!
+                    De app controleert eerst of <code>config.js</code> beschikbaar is. Als deze ontbreekt of geen geldige Client ID bevat,
+                    toont de app automatisch de Custom Client Setup wizard waar gebruikers hun eigen Client ID kunnen invoeren.
                 </p>
             </div>
 
@@ -284,8 +295,8 @@
                 <ul>
                     <li><strong>Client ID is publiek:</strong> De Spotify Client ID is geen geheim - het is veilig om deze in je frontend code te hebben</li>
                     <li><strong>PKCE Flow:</strong> Deze app gebruikt PKCE (Proof Key for Code Exchange) voor veilige authenticatie zonder Client Secret</li>
-                    <li><strong>Geen secrets in repository:</strong> De Client ID wordt nooit gecommit naar je repository</li>
-                    <li><strong>GitHub Secrets:</strong> Je Client ID wordt veilig opgeslagen in GitHub en alleen gebruikt tijdens deployment</li>
+                    <li><strong>Geen geheimen nodig:</strong> PKCE maakt gebruik van dynamisch gegenereerde codes per authenticatie sessie</li>
+                    <li><strong>Beveiliging door design:</strong> Spotify's OAuth 2.0 PKCE flow is specifiek ontworpen voor public clients zoals web apps</li>
                 </ul>
             </div>
 
@@ -293,12 +304,21 @@
             <div class="info-box">
                 <h3>Waarom zie ik de melding "Spotify is nog niet geconfigureerd"?</h3>
                 <p style="color: #B3B3B3; margin-bottom: 12px;">
-                    Dit betekent dat de <code>SPOTIFY_CLIENT_ID</code> GitHub Secret nog niet is ingesteld of dat de app nog niet is gedeployed na het instellen van de secret.
+                    Dit betekent dat <code>config.js</code> niet bestaat of geen geldige Client ID bevat.
+                    Volg de configuratie-instructies hierboven om dit op te lossen.
                 </p>
 
                 <h3>Kan ik de app lokaal testen?</h3>
                 <p style="color: #B3B3B3; margin-bottom: 12px;">
-                    Ja! Open <code>index.html</code> in een browser en gebruik de "Custom Client Setup" functie om tijdelijk je eigen Client ID in te voeren voor local testing.
+                    Ja! Voor lokale testing kun je de "Custom Client Setup" functie gebruiken om tijdelijk je Client ID in te voeren zonder <code>config.js</code> te maken.
+                    Of maak een <code>config.js</code> bestand aan (dit wordt niet gecommit dankzij <code>.gitignore</code>).
+                </p>
+
+                <h3>Is het veilig om mijn Client ID in de repository te committen?</h3>
+                <p style="color: #B3B3B3; margin-bottom: 12px;">
+                    <strong>Ja, absoluut!</strong> De Spotify Client ID is expliciet ontworpen om publiek te zijn.
+                    Spotify gebruikt PKCE voor beveiliging, wat betekent dat er geen Client Secret nodig is.
+                    Elke gebruiker die je website bezoekt kan de Client ID toch in de browser bekijken.
                 </p>
 
                 <h3>Moet ik mijn Spotify app in Production Mode zetten?</h3>
