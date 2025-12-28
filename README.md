@@ -232,7 +232,6 @@ Ga naar je repository **Settings** > **Secrets and variables** > **Actions** en 
 
 | Secret | Beschrijving | Voorbeeld voor DirectAdmin |
 |--------|--------------|----------------------------|
-| `SPOTIFY_CLIENT_ID` | **Spotify Client ID** (zie setup hieronder) | `abc123def456...` |
 | `SSH_PRIVATE_KEY` | Je SSH private key | Inhoud van `~/.ssh/id_ed25519` |
 | `SSH_HOST` | Hostname van je server | `htools.nl` |
 | `SSH_USERNAME` | SSH gebruikersnaam | Je DirectAdmin gebruikersnaam |
@@ -295,30 +294,27 @@ De redirect URI wordt dynamisch gegenereerd! 🎉
 De deployment start automatisch bij elke push naar `main`. Check de **Actions** tab voor de status.
 
 **De workflow:**
-1. ✅ Valideert alle secrets
-2. ✅ Injecteert Spotify Client ID in index.html
-3. ✅ Test SSH verbinding
-4. ✅ Maakt deployment directory aan
-5. ✅ Synchroniseert bestanden via rsync
-6. ✅ Deployment compleet!
+1. ✅ Checkout van de code
+2. ✅ Setup SSH verbinding met je server
+3. ✅ Maakt deployment directory aan op de server
+4. ✅ Synchroniseert bestanden via rsync
+   - Exclusief: `.git`, `.github`, `stappenlijst.md`, `config.js`
+5. ✅ Deployment compleet!
 
-### 🎵 Hoe werkt de Spotify Client ID Injectie?
+### 🎵 Spotify Client ID Configuratie
 
-De Spotify Client ID wordt tijdens deployment automatisch in `index.html` geïnjecteerd:
+Voor de Spotify integratie zijn er twee opties:
 
-```yaml
-- name: Inject Spotify Client ID
-  run: |
-    sed -i "s/SPOTIFY_CLIENT_ID_PLACEHOLDER/${{ secrets.SPOTIFY_CLIENT_ID }}/g" index.html
-```
+**Optie A: config.js bestand (Aanbevolen voor eigen deployment)**
+1. Kopieer `config.example.js` naar `config.js`
+2. Vul je Spotify Client ID in
+3. Commit en push `config.js` naar je repository
+   - **Veilig:** Je Client ID is publiek zichtbaar in de code, maar dit is geen probleem! Spotify gebruikt PKCE (Proof Key for Code Exchange) voor beveiliging, waardoor er geen geheim nodig is.
 
-Dit betekent:
-- ✅ De Client ID wordt **nooit** in de repository opgeslagen
-- ✅ De app werkt op **alle apparaten** zonder extra configuratie
-- ✅ Gebruikers hoeven **geen setup** te doen
-- ✅ Je kunt de Client ID gemakkelijk wijzigen via GitHub Secrets
-
-**Voor lokale development**: Gebruik de "Custom Client Setup" functie in de app om tijdelijk je eigen Client ID in te voeren.
+**Optie B: Custom Client Setup (Voor bezoekers van je site)**
+- Als je `config.js` niet committen wilt, of je Spotify app staat in Development Mode:
+- Gebruikers kunnen hun eigen Spotify Client ID invoeren via de setup wizard in de app
+- Dit is handig als gebruikers niet als test users zijn toegevoegd aan jouw Spotify app
 
 ## 📧 Support
 
