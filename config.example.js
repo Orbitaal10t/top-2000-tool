@@ -24,6 +24,30 @@ const CONFIG = {
             stationSlug: 'radio-538',
             apiKey: 'da2-abza7qpnqbfe5ihpk4jhcslpgy',
             liveUrl: 'https://www.538.nl/playlist'
+        },
+        'radio-10': {
+            name: 'Radio 10',
+            type: 'talpa',
+            apiUrl: 'https://graph.talparad.io/',
+            stationSlug: 'radio-10',
+            apiKey: 'da2-abza7qpnqbfe5ihpk4jhcslpgy',
+            liveUrl: 'https://www.radio10.nl/playlist'
+        },
+        'sky-radio': {
+            name: 'Sky Radio',
+            type: 'talpa',
+            apiUrl: 'https://graph.talparad.io/',
+            stationSlug: 'sky-radio',
+            apiKey: 'da2-abza7qpnqbfe5ihpk4jhcslpgy',
+            liveUrl: 'https://www.skyradio.nl/playlist'
+        },
+        'radio-noordzee': {
+            name: 'Radio Noordzee',
+            type: 'talpa',
+            apiUrl: 'https://graph.talparad.io/',
+            stationSlug: 'radio-noordzee',
+            apiKey: 'da2-abza7qpnqbfe5ihpk4jhcslpgy',
+            liveUrl: 'https://www.radionoodzee.nl/'
         }
     },
 
