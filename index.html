@@ -778,8 +778,16 @@
             throw new Error('CONFIG not loaded');
         }
 
-        const RADIO_STATIONS = CONFIG.RADIO_STATIONS;
-        const DEFAULT_STATION = CONFIG.DEFAULT_STATION;
+        // Backwards compatibility: if RADIO_STATIONS doesn't exist, create it from old config
+        const RADIO_STATIONS = CONFIG.RADIO_STATIONS || {
+            'npo-radio-2': {
+                name: 'NPO Radio 2',
+                type: 'npo',
+                apiUrl: CONFIG.NPO_API_URL || 'https://www.nporadio2.nl/api/miniplayer/info?channel=npo-radio-2',
+                liveUrl: 'https://www.nporadio2.nl/online-radio-luisteren/gedraaid'
+            }
+        };
+        const DEFAULT_STATION = CONFIG.DEFAULT_STATION || 'npo-radio-2';
         const SPOTIFY_AUTH_URL = CONFIG.SPOTIFY_AUTH_URL;
         const SPOTIFY_TOKEN_URL = CONFIG.SPOTIFY_TOKEN_URL;
         const SPOTIFY_API_URL = CONFIG.SPOTIFY_API_URL;
