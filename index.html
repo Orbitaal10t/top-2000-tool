@@ -1401,10 +1401,10 @@
                 return `<span class="chart-change chart-same">±0</span>`;
             } else if (change > 0) {
                 // Moved up (better position) - green
-                return `<span class="chart-change chart-up">↑${change}</span>`;
+                return `<span class="chart-change chart-up"><i class="fa-solid fa-circle-up"></i>${change}</span>`;
             } else {
                 // Moved down (worse position) - red
-                return `<span class="chart-change chart-down">↓${Math.abs(change)}</span>`;
+                return `<span class="chart-change chart-down"><i class="fa-solid fa-circle-down"></i>${Math.abs(change)}</span>`;
             }
         }
 
