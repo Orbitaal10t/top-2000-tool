@@ -616,8 +616,8 @@
     <div class="container">
         <!-- Header -->
         <div class="card">
-            <h1><i class="fa-solid fa-music"></i> Dé Top 2000 tool</h1>
-            <p class="subtitle">Voeg het nummer dat nu op de radio is direct toe aan je playlist!</p>
+            <h1><i class="fa-solid fa-music"></i> Radio Tracker</h1>
+            <p class="subtitle">Voeg nummers van je favoriete radiostation direct toe aan je Spotify playlist!</p>
 
             <!-- Alert Messages -->
             <div id="alert" class="alert"></div>
@@ -1029,6 +1029,10 @@
                     document.getElementById('storageChoice').classList.remove('active');
                     document.getElementById('customClientSetup').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';
+
+                    // Populate station selector after mainApp is visible
+                    populateStationSelector();
+                    updateLiveListenLink();
 
                     await updateSpotifyStatus();
 
@@ -1972,6 +1976,10 @@
                 document.getElementById('storageChoice').classList.remove('active');
                 document.getElementById('mainApp').style.display = 'block';
 
+                // Populate station selector after mainApp is visible
+                populateStationSelector();
+                updateLiveListenLink();
+
                 await updateSpotifyStatus();
                 fetchNowPlaying();
                 startPolling();
@@ -2056,14 +2064,14 @@
                 await handleSpotifyCallback();
             }
 
-            // Populate station selector
-            populateStationSelector();
-            updateLiveListenLink();
-
             // Show appropriate screen
             if (storageMethod && storageMethod === 'spotify' && spotifyAccessToken) {
                 // Spotify selected and logged in - show main app
                 document.getElementById('mainApp').style.display = 'block';
+
+                // Populate station selector after mainApp is visible
+                populateStationSelector();
+                updateLiveListenLink();
 
                 await updateSpotifyStatus();
 
