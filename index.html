@@ -772,6 +772,12 @@
         // ============================================
         // CONFIGURATION (from config.js)
         // ============================================
+        // Check if CONFIG is loaded
+        if (typeof CONFIG === 'undefined') {
+            alert('Fout: config.js niet geladen. Herlaad de pagina of controleer je webserver.');
+            throw new Error('CONFIG not loaded');
+        }
+
         const RADIO_STATIONS = CONFIG.RADIO_STATIONS;
         const DEFAULT_STATION = CONFIG.DEFAULT_STATION;
         const SPOTIFY_AUTH_URL = CONFIG.SPOTIFY_AUTH_URL;
@@ -2045,6 +2051,8 @@
         // INITIALIZATION
         // ============================================
         async function init() {
+            console.log('=== App Initialization Started ===');
+
             // Clear old local storage tracks
             localStorage.removeItem('top2000lijst');
 
@@ -2055,17 +2063,26 @@
             spotifyTokenExpiry = getFromLocalStorage('spotifyTokenExpiry');
             selectedPlaylistId = getFromLocalStorage('selectedPlaylistId');
 
+            console.log('Storage method:', storageMethod);
+            console.log('Has Spotify token:', !!spotifyAccessToken);
+
             // Load selected station or use default
             currentStation = getFromLocalStorage('selectedStation') || DEFAULT_STATION;
             saveToLocalStorage('selectedStation', currentStation);
 
+            console.log('Current station:', currentStation);
+
             // Check for OAuth callback
             if (window.location.search.includes('code=')) {
+                console.log('OAuth callback detected');
                 await handleSpotifyCallback();
             }
 
             // Show appropriate screen
+            console.log('Determining which screen to show...');
             if (storageMethod && storageMethod === 'spotify' && spotifyAccessToken) {
+                console.log('Showing main app (logged in)');
+
                 // Spotify selected and logged in - show main app
                 document.getElementById('mainApp').style.display = 'block';
 
@@ -2086,12 +2103,18 @@
                 updateTrackCount();
             } else {
                 // No storage method, local storage, or not logged in - show storage choice
+                console.log('Showing storage choice screen (not logged in)');
+
                 if (storageMethod === 'local') {
                     // Clear old local storage method
                     localStorage.removeItem('storageMethod');
                     showAlert('Lokale opslag wordt niet meer ondersteund. Log in met Spotify om door te gaan.', 'info');
                 }
-                document.getElementById('storageChoice').classList.add('active');
+
+                const storageChoiceEl = document.getElementById('storageChoice');
+                console.log('Storage choice element:', storageChoiceEl);
+                storageChoiceEl.classList.add('active');
+                console.log('Storage choice classes:', storageChoiceEl.className);
             }
 
             // Event listeners
@@ -2108,10 +2131,16 @@
             window.chooseStorage = chooseStorage;
             window.saveUserClientId = saveUserClientId;
             window.changeStation = changeStation;
+
+            console.log('=== App Initialization Complete ===');
         }
 
         // Start the app
-        init();
+        console.log('Starting app initialization...');
+        init().catch(error => {
+            console.error('Initialization error:', error);
+            alert('Fout bij initialiseren van de app: ' + error.message);
+        });
     </script>
 </body>
 </html>
