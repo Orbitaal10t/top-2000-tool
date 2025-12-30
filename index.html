@@ -831,7 +831,16 @@
 
         function getFromLocalStorage(key) {
             const item = localStorage.getItem(key);
-            return item ? JSON.parse(item) : null;
+            // Handle edge cases: null, "undefined", "null"
+            if (!item || item === 'undefined' || item === 'null') {
+                return null;
+            }
+            try {
+                return JSON.parse(item);
+            } catch (error) {
+                console.warn(`Failed to parse localStorage key "${key}":`, item, error);
+                return null;
+            }
         }
 
         // ============================================
