@@ -531,6 +531,42 @@
             margin-bottom: 16px;
         }
 
+        /* Radio Station Selector */
+        .station-selector {
+            margin-bottom: 20px;
+            background: #f9f9f9;
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .station-selector label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .station-selector select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+
+        .station-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .station-selector select:hover {
+            border-color: #999;
+        }
+
         /* Spotify-specific styling (volgens Spotify Design Guidelines) */
 
         /* Spotify Buttons - volgens Spotify guidelines */
@@ -608,9 +644,19 @@
 
             <!-- Main App (hidden until storage is chosen) -->
             <div id="mainApp" style="display: none;">
+                <!-- Radio Station Selector -->
+                <div class="station-selector">
+                    <label for="stationSelector">
+                        <i class="fa-solid fa-radio"></i> Selecteer Radiostation
+                    </label>
+                    <select id="stationSelector" onchange="changeStation()">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+
                 <!-- Live Listen Button -->
                 <div style="text-align: right; margin-bottom: 16px;">
-                    <a href="https://www.nporadio2.nl/online-radio-luisteren/gedraaid" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-small" style="text-decoration: none; font-size: 13px;">
+                    <a id="liveListen" href="https://www.nporadio2.nl/online-radio-luisteren/gedraaid" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-small" style="text-decoration: none; font-size: 13px;">
                         <i class="fa-solid fa-radio"></i> Live luisteren
                     </a>
                 </div>
@@ -726,7 +772,8 @@
         // ============================================
         // CONFIGURATION (from config.js)
         // ============================================
-        const NPO_API_URL = CONFIG.NPO_API_URL;
+        const RADIO_STATIONS = CONFIG.RADIO_STATIONS;
+        const DEFAULT_STATION = CONFIG.DEFAULT_STATION;
         const SPOTIFY_AUTH_URL = CONFIG.SPOTIFY_AUTH_URL;
         const SPOTIFY_TOKEN_URL = CONFIG.SPOTIFY_TOKEN_URL;
         const SPOTIFY_API_URL = CONFIG.SPOTIFY_API_URL;
@@ -739,6 +786,7 @@
         // ============================================
         // STATE
         // ============================================
+        let currentStation = null;
         let currentTrack = null;
         let previousTracks = [];
         let storageMethod = null;
@@ -778,6 +826,57 @@
         function getFromLocalStorage(key) {
             const item = localStorage.getItem(key);
             return item ? JSON.parse(item) : null;
+        }
+
+        // ============================================
+        // RADIO STATION FUNCTIONS
+        // ============================================
+        function populateStationSelector() {
+            const selector = document.getElementById('stationSelector');
+            selector.innerHTML = '';
+
+            Object.keys(RADIO_STATIONS).forEach(stationId => {
+                const station = RADIO_STATIONS[stationId];
+                const option = document.createElement('option');
+                option.value = stationId;
+                option.textContent = station.name;
+                if (stationId === currentStation) {
+                    option.selected = true;
+                }
+                selector.appendChild(option);
+            });
+        }
+
+        function changeStation() {
+            const selector = document.getElementById('stationSelector');
+            const newStation = selector.value;
+
+            if (newStation !== currentStation) {
+                currentStation = newStation;
+                saveToLocalStorage('selectedStation', newStation);
+
+                // Update live listen link
+                updateLiveListenLink();
+
+                // Clear current data and fetch new
+                currentTrack = null;
+                previousTracks = [];
+                document.getElementById('nowPlayingContent').innerHTML = '<div class="loading">Bezig met laden...</div>';
+
+                // Restart polling with new station
+                stopPolling();
+                fetchNowPlaying();
+                startPolling();
+
+                showAlert(`Gewisseld naar ${RADIO_STATIONS[newStation].name}`, 'success');
+            }
+        }
+
+        function updateLiveListenLink() {
+            const liveListenBtn = document.getElementById('liveListen');
+            if (currentStation && RADIO_STATIONS[currentStation]) {
+                liveListenBtn.href = RADIO_STATIONS[currentStation].liveUrl;
+            }
         }
 
         function updateTrackCount() {
@@ -1056,75 +1155,174 @@
         }
 
         // ============================================
-        // NPO RADIO 2 API
+        // RADIO API FUNCTIONS
         // ============================================
         async function fetchNowPlaying() {
+            if (!currentStation || !RADIO_STATIONS[currentStation]) {
+                console.error('No valid station selected');
+                return;
+            }
+
+            const station = RADIO_STATIONS[currentStation];
+
             try {
-                const response = await fetch(NPO_API_URL);
-
-                if (!response.ok) {
-                    throw new Error('API request failed');
-                }
-
-                const data = await response.json();
-
-                // Parse the response - miniplayer API format
-                // Get all tracks from radioTrackPlays
-                const allTracks = data?.data?.radioTrackPlays?.data || [];
-                const currentBroadcast = data?.data?.radioBroadcasts?.data?.[0];
-
-                if (allTracks.length === 0) {
-                    throw new Error('No tracks found');
-                }
-
-                // Get current playing track (first one)
-                const currentPlay = allTracks[0];
-
-                if (currentPlay?.artist && currentPlay?.song) {
-                    // Extract chart position data - it's on the track play object directly, not nested in radioTracks
-                    const chartData = currentPlay.cmsChartEditionPositions;
-
-                    currentTrack = {
-                        artist: currentPlay.artist,
-                        title: currentPlay.song,
-                        coverUrl: currentPlay.radioTracks?.coverUrl || null,
-                        presenters: currentBroadcast?.radioPresenters?.map(p => p.name) || [],
-                        timestamp: new Date().toISOString(),
-                        chartPosition: chartData?.position ? parseInt(chartData.position) : null,
-                        lastChartPosition: chartData?.lastPosition ? parseInt(chartData.lastPosition) : null,
-                        chartTitle: chartData?.cmsChartEditions?.cmsCharts?.title || null
-                    };
-
-                    displayNowPlaying(currentTrack);
-                    document.getElementById('addToListBtn').disabled = false;
+                if (station.type === 'npo') {
+                    await fetchNPONowPlaying(station);
+                } else if (station.type === 'talpa') {
+                    await fetchTalpaNowPlaying(station);
                 } else {
-                    throw new Error('Invalid data format');
+                    throw new Error(`Unknown station type: ${station.type}`);
                 }
-
-                // Get previous tracks (skip first one which is current)
-                previousTracks = allTracks.slice(1).map(track => {
-                    const chartData = track.cmsChartEditionPositions;
-                    return {
-                        artist: track.artist,
-                        title: track.song,
-                        from: track.from,
-                        until: track.until,
-                        coverUrl: track.radioTracks?.coverUrl || null,
-                        chartPosition: chartData?.position ? parseInt(chartData.position) : null,
-                        lastChartPosition: chartData?.lastPosition ? parseInt(chartData.lastPosition) : null
-                    };
-                });
-
-                // Display previous tracks
-                displayPreviousTracks();
-
             } catch (error) {
                 console.error('Error fetching now playing:', error);
                 document.getElementById('nowPlayingContent').innerHTML = `
-                    <div class="loading"><i class="fa-solid fa-triangle-exclamation"></i> Kon niet verbinden met NPO Radio 2 API</div>
+                    <div class="loading"><i class="fa-solid fa-triangle-exclamation"></i> Kon niet verbinden met ${station.name} API</div>
                 `;
                 document.getElementById('addToListBtn').disabled = true;
             }
+        }
+
+        async function fetchNPONowPlaying(station) {
+            const response = await fetch(station.apiUrl);
+
+            if (!response.ok) {
+                throw new Error('NPO API request failed');
+            }
+
+            const data = await response.json();
+
+            // Parse the response - miniplayer API format
+            // Get all tracks from radioTrackPlays
+            const allTracks = data?.data?.radioTrackPlays?.data || [];
+            const currentBroadcast = data?.data?.radioBroadcasts?.data?.[0];
+
+            if (allTracks.length === 0) {
+                throw new Error('No tracks found');
+            }
+
+            // Get current playing track (first one)
+            const currentPlay = allTracks[0];
+
+            if (currentPlay?.artist && currentPlay?.song) {
+                // Extract chart position data - it's on the track play object directly, not nested in radioTracks
+                const chartData = currentPlay.cmsChartEditionPositions;
+
+                currentTrack = {
+                    artist: currentPlay.artist,
+                    title: currentPlay.song,
+                    coverUrl: currentPlay.radioTracks?.coverUrl || null,
+                    presenters: currentBroadcast?.radioPresenters?.map(p => p.name) || [],
+                    timestamp: new Date().toISOString(),
+                    chartPosition: chartData?.position ? parseInt(chartData.position) : null,
+                    lastChartPosition: chartData?.lastPosition ? parseInt(chartData.lastPosition) : null,
+                    chartTitle: chartData?.cmsChartEditions?.cmsCharts?.title || null
+                };
+
+                displayNowPlaying(currentTrack);
+                document.getElementById('addToListBtn').disabled = false;
+            } else {
+                throw new Error('Invalid data format');
+            }
+
+            // Get previous tracks (skip first one which is current)
+            previousTracks = allTracks.slice(1).map(track => {
+                const chartData = track.cmsChartEditionPositions;
+                return {
+                    artist: track.artist,
+                    title: track.song,
+                    from: track.from,
+                    until: track.until,
+                    coverUrl: track.radioTracks?.coverUrl || null,
+                    chartPosition: chartData?.position ? parseInt(chartData.position) : null,
+                    lastChartPosition: chartData?.lastPosition ? parseInt(chartData.lastPosition) : null
+                };
+            });
+
+            // Display previous tracks
+            displayPreviousTracks();
+        }
+
+        async function fetchTalpaNowPlaying(station) {
+            const query = `query CurrentTrackQuery($stationSlug:String!){station(slug:$stationSlug){getPlayouts{playouts{track{id title artistName isrc images{uri imageType title}}rankings{position listName}}}}}`;
+
+            const response = await fetch(station.apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': station.apiKey
+                },
+                body: JSON.stringify({
+                    query: query,
+                    variables: {
+                        stationSlug: station.stationSlug
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Talpa API request failed');
+            }
+
+            const data = await response.json();
+
+            // Parse Talpa Radio GraphQL response
+            const playouts = data?.data?.station?.getPlayouts?.playouts || [];
+
+            if (playouts.length === 0) {
+                throw new Error('No tracks found');
+            }
+
+            // Get current playing track (first one)
+            const currentPlayout = playouts[0];
+            const track = currentPlayout.track;
+
+            if (track?.artistName && track?.title) {
+                // Find cover image
+                const coverImage = track.images?.find(img => img.imageType === 'image');
+
+                // Find chart position (looking for "PARTY TOP 1000" or any ranking)
+                const ranking = currentPlayout.rankings && currentPlayout.rankings.length > 0
+                    ? currentPlayout.rankings[0]
+                    : null;
+
+                currentTrack = {
+                    artist: track.artistName,
+                    title: track.title,
+                    coverUrl: coverImage?.uri || null,
+                    presenters: [], // Talpa API doesn't provide presenter info in this endpoint
+                    timestamp: new Date().toISOString(),
+                    chartPosition: ranking?.position || null,
+                    lastChartPosition: null, // Talpa API doesn't provide previous position
+                    chartTitle: ranking?.listName || null
+                };
+
+                displayNowPlaying(currentTrack);
+                document.getElementById('addToListBtn').disabled = false;
+            } else {
+                throw new Error('Invalid data format');
+            }
+
+            // Get previous tracks (skip first one which is current)
+            previousTracks = playouts.slice(1, 11).map(playout => {
+                const track = playout.track;
+                const coverImage = track.images?.find(img => img.imageType === 'image');
+                const ranking = playout.rankings && playout.rankings.length > 0
+                    ? playout.rankings[0]
+                    : null;
+
+                return {
+                    artist: track.artistName,
+                    title: track.title,
+                    coverUrl: coverImage?.uri || null,
+                    chartPosition: ranking?.position || null,
+                    lastChartPosition: null,
+                    from: null, // Not available in Talpa API
+                    until: null // Not available in Talpa API
+                };
+            });
+
+            // Display previous tracks
+            displayPreviousTracks();
         }
 
         function displayNowPlaying(track) {
@@ -1195,9 +1393,13 @@
             card.style.display = 'block';
 
             const html = previousTracks.map((track, index) => {
-                // Format time
-                const fromTime = new Date(track.from).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-                const untilTime = new Date(track.until).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+                // Format time (if available)
+                let timeInfo = '';
+                if (track.from && track.until) {
+                    const fromTime = new Date(track.from).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+                    const untilTime = new Date(track.until).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+                    timeInfo = `<div style="font-size: 12px; color: #6A6A6A; margin-top: 4px;">${fromTime} - ${untilTime}</div>`;
+                }
 
                 // Chart position display for previous tracks - compact format
                 const chartInfo = track.chartPosition
@@ -1212,7 +1414,7 @@
                             <div class="track-artist">${escapeHtml(track.artist)}</div>
                             <div class="track-title">${escapeHtml(track.title)}</div>
                             ${chartInfo}
-                            <div style="font-size: 12px; color: #6A6A6A; margin-top: 4px;">${fromTime} - ${untilTime}</div>
+                            ${timeInfo}
                         </div>
                         <button class="btn btn-primary btn-small" onclick="addPreviousTrackToList(${index})">
                             Voeg toe
@@ -1845,10 +2047,18 @@
             spotifyTokenExpiry = getFromLocalStorage('spotifyTokenExpiry');
             selectedPlaylistId = getFromLocalStorage('selectedPlaylistId');
 
+            // Load selected station or use default
+            currentStation = getFromLocalStorage('selectedStation') || DEFAULT_STATION;
+            saveToLocalStorage('selectedStation', currentStation);
+
             // Check for OAuth callback
             if (window.location.search.includes('code=')) {
                 await handleSpotifyCallback();
             }
+
+            // Populate station selector
+            populateStationSelector();
+            updateLiveListenLink();
 
             // Show appropriate screen
             if (storageMethod && storageMethod === 'spotify' && spotifyAccessToken) {
@@ -1889,6 +2099,7 @@
             window.createNewPlaylist = createNewPlaylist;
             window.chooseStorage = chooseStorage;
             window.saveUserClientId = saveUserClientId;
+            window.changeStation = changeStation;
         }
 
         // Start the app

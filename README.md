@@ -1,10 +1,12 @@
-# NPO Radio 2 - Now Playing Tracker
+# Radio Tracker - Multi-Station Now Playing Tool
 
-Single-page app om NPO Radio 2 tracks toe te voegen aan een Spotify playlist.
+Single-page app om tracks van verschillende radiostations toe te voegen aan een Spotify playlist.
 
 ## Features
 
-- Live now playing data van NPO Radio 2
+- Multi-station support (NPO Radio 2, Radio 538, en meer)
+- Live now playing data met album covers
+- Chart posities weergave
 - Spotify OAuth integratie (PKCE flow)
 - Automatische token refresh
 - PWA support
@@ -66,7 +68,77 @@ playlist-read-private
 ### APIs gebruikt
 
 - NPO Radio 2: `https://www.nporadio2.nl/api/miniplayer/info?channel=npo-radio-2`
+- Talpa Radio (Radio 538): `https://graph.talparad.io/` (GraphQL)
 - Spotify Web API: search, playlists
+
+## Nieuwe radiostations toevoegen
+
+De app ondersteunt meerdere radiostations. Nieuwe stations kunnen eenvoudig worden toegevoegd in `config.js`.
+
+### Voorbeeld: Radio 538 toevoegen
+
+In `config.js`, voeg het station toe aan het `RADIO_STATIONS` object:
+
+```javascript
+RADIO_STATIONS: {
+    'npo-radio-2': {
+        name: 'NPO Radio 2',
+        type: 'npo',
+        apiUrl: 'https://www.nporadio2.nl/api/miniplayer/info?channel=npo-radio-2',
+        liveUrl: 'https://www.nporadio2.nl/online-radio-luisteren/gedraaid'
+    },
+    'radio-538': {
+        name: 'Radio 538',
+        type: 'talpa',
+        apiUrl: 'https://graph.talparad.io/',
+        stationSlug: 'radio-538',
+        apiKey: 'da2-abza7qpnqbfe5ihpk4jhcslpgy',
+        liveUrl: 'https://www.538.nl/playlist'
+    }
+}
+```
+
+### Ondersteunde station types
+
+**NPO type** (`type: 'npo'`)
+- Voor NPO radiostations (Radio 2, 3FM, etc.)
+- Vereist: `apiUrl`, `liveUrl`
+
+**Talpa type** (`type: 'talpa'`)
+- Voor Talpa Radio stations (Radio 538, Radio 10, etc.)
+- Vereist: `apiUrl`, `stationSlug`, `apiKey`, `liveUrl`
+
+### Nieuwe station types toevoegen
+
+Voor stations met een andere API:
+
+1. Voeg het nieuwe type toe aan `config.js`
+2. Implementeer een nieuwe fetch functie in `index.html` (bijvoorbeeld `fetchYourStationNowPlaying()`)
+3. Voeg de type check toe in de `fetchNowPlaying()` functie
+
+Voorbeeld structuur:
+
+```javascript
+async function fetchYourStationNowPlaying(station) {
+    // Haal data op van de API
+    const response = await fetch(station.apiUrl);
+    const data = await response.json();
+
+    // Parse de data en set currentTrack
+    currentTrack = {
+        artist: data.artist,
+        title: data.title,
+        coverUrl: data.cover,
+        presenters: [],
+        timestamp: new Date().toISOString(),
+        chartPosition: null,
+        lastChartPosition: null,
+        chartTitle: null
+    };
+
+    displayNowPlaying(currentTrack);
+}
+```
 
 ## Troubleshooting
 
