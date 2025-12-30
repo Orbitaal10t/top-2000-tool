@@ -1083,9 +1083,9 @@
             const container = document.getElementById('nowPlayingContent');
             const now = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
 
-            const coverHtml = track.coverUrl
-                ? `<img src="${escapeHtml(track.coverUrl)}" alt="Album cover" class="cover-image" onerror="this.style.display='none'">`
-                : '';
+            // Use fallback cover image if no cover URL is available
+            const coverUrl = track.coverUrl || 'images/cover-fallback.jpg';
+            const coverHtml = `<img src="${escapeHtml(coverUrl)}" alt="Album cover" class="cover-image" onerror="this.src='images/cover-fallback.jpg'">`;
 
             const presenterHtml = track.presenters && track.presenters.length > 0
                 ? `<div class="presenter"><i class="fa-solid fa-microphone"></i> ${escapeHtml(track.presenters.join(', '))}</div>`
