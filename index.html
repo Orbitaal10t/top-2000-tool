@@ -1106,8 +1106,8 @@
                 const currentPlay = allTracks[0];
 
                 if (currentPlay?.artist && currentPlay?.song) {
-                    // Extract chart position data
-                    const chartData = currentPlay.radioTracks?.cmsChartEditionPositions;
+                    // Extract chart position data - it's on the track play object directly, not nested in radioTracks
+                    const chartData = currentPlay.cmsChartEditionPositions;
 
                     currentTrack = {
                         artist: currentPlay.artist,
@@ -1128,7 +1128,7 @@
 
                 // Get previous tracks (skip first one which is current)
                 previousTracks = allTracks.slice(1).map(track => {
-                    const chartData = track.radioTracks?.cmsChartEditionPositions;
+                    const chartData = track.cmsChartEditionPositions;
                     return {
                         artist: track.artist,
                         title: track.song,
