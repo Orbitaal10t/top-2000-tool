@@ -351,39 +351,13 @@
         }
 
         /* Chart Position Styling */
-        .chart-position-container {
+        .chart-position-compact {
+            text-align: center;
             margin-top: 8px;
             margin-bottom: 8px;
-        }
-
-        .chart-position-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 4px;
-        }
-
-        .chart-label {
-            font-size: 13px;
-            color: #666;
-            font-weight: 500;
-        }
-
-        .chart-current {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
-            color: #1DB954;
-        }
-
-        .chart-position-details {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-        }
-
-        .chart-last {
-            color: #888;
+            color: #333;
         }
 
         .chart-change {
@@ -391,6 +365,7 @@
             border-radius: 12px;
             font-weight: 600;
             font-size: 12px;
+            margin-left: 4px;
         }
 
         .chart-up {
@@ -1164,19 +1139,10 @@
                 ? `<div class="presenter"><i class="fa-solid fa-microphone"></i> ${escapeHtml(track.presenters.join(', '))}</div>`
                 : '';
 
-            // Chart position display
+            // Chart position display - compact format
             const chartHtml = track.chartPosition
-                ? `<div class="chart-position-container">
-                    <div class="chart-position-badge">
-                        <span class="chart-label">Positie:</span>
-                        <span class="chart-current">#${track.chartPosition}</span>
-                    </div>
-                    ${track.lastChartPosition ? `
-                        <div class="chart-position-details">
-                            <span class="chart-last">Vorig jaar: #${track.lastChartPosition}</span>
-                            ${formatChartPositionChange(track.chartPosition, track.lastChartPosition)}
-                        </div>
-                    ` : ''}
+                ? `<div class="chart-position-compact">
+                    #${track.chartPosition} ${track.lastChartPosition ? formatChartPositionChange(track.chartPosition, track.lastChartPosition) : ''}
                 </div>`
                 : '';
 
@@ -1233,11 +1199,10 @@
                 const fromTime = new Date(track.from).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
                 const untilTime = new Date(track.until).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
 
-                // Chart position display for previous tracks
+                // Chart position display for previous tracks - compact format
                 const chartInfo = track.chartPosition
-                    ? `<div style="font-size: 13px; color: #333; margin-top: 4px; font-weight: 600;">
-                        #${track.chartPosition}
-                        ${track.lastChartPosition ? ` ${formatChartPositionChange(track.chartPosition, track.lastChartPosition)}` : ''}
+                    ? `<div style="font-size: 14px; color: #333; margin-top: 4px; font-weight: 600;">
+                        #${track.chartPosition} ${track.lastChartPosition ? formatChartPositionChange(track.chartPosition, track.lastChartPosition) : ''}
                     </div>`
                     : '';
 
